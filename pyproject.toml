@@ -1,0 +1,22 @@
+[project]
+name = "nes"
+version = "0.0.0"
+description = "Package Implementing Natural Evolution Strategies for general Black Box Models."
+authors = [
+    {name = "Christof Stein",email = "christof.stein@student.uibk.ac.at"}
+]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy (>=2.2.4,<3.0.0)",
+    "pre-commit (>=4.2.0,<5.0.0)"
+]
+
+[tool.poetry]
+
+[tool.poetry.group.dev.dependencies]
+numba = "^0.61.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
