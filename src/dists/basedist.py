@@ -1,8 +1,24 @@
+from models.basemodel import Model
 import numpy as np
 
 
 class Dist:
     """Base class for distributions."""
+
+    @classmethod
+    def from_dimensions(cls, num_dimensions: int) -> "Dist":
+        """Generate a distribution from the number of dimensins of a Model."""
+        raise NotImplementedError
+
+    @classmethod
+    def from_model(cls, model: Model) -> "Dist":
+        """Generate a model from a Model diretly."""
+        raise NotImplementedError
+
+    @property
+    def num_params(self) -> int:
+        """Return the number of parameters of the Distribution."""
+        raise NotImplementedError
 
     def get_samples(self, parameters: np.ndarray) -> np.ndarray:
         """Get samples with current parameters."""
