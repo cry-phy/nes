@@ -5,6 +5,11 @@ import numpy as np
 class Dist:
     """Base class for distributions."""
 
+    def __init__(self, num_dimensions: int) -> None:
+        """Generate Instance of Class."""
+        self._num_dimensions = num_dimensions
+        self._params = np.empty(0)
+
     @classmethod
     def from_dimensions(cls, num_dimensions: int) -> "Dist":
         """Generate a distribution from the number of dimensins of a Model."""
@@ -12,25 +17,34 @@ class Dist:
 
     @classmethod
     def from_model(cls, model: Model) -> "Dist":
-        """Generate a model from a Model diretly."""
+        """Generate a model from a Model directly."""
         raise NotImplementedError
 
     @property
     def num_params(self) -> int:
         """Return the number of parameters of the Distribution."""
-        raise NotImplementedError
+        return self._params.size
+
+    @property
+    def parameters(self):
+        """The parameters property."""
+        return self._params
+
+    @parameters.setter
+    def parameters(self, value):
+        self._params = value
 
     def get_samples(self, parameters: np.ndarray) -> np.ndarray:
         """Get samples with current parameters."""
         raise NotImplementedError
 
-    def get_param_variation(
-        self, samples: np.ndarray, fitnesses: np.ndarray
-    ) -> np.ndarray:
+    def param_variation(self, samples: np.ndarray, fitnesses: np.ndarray) -> None:
         """Get variation of parameters."""
-        return self._inverse_fisher(samples) @ self._gradient(samples, fitnesses)
+        self._params += self._inverse_fisher(samples) @ self._gradient(
+            samples, fitnesses
+        )
 
-    def get_init_params(self, *args, **kwargs) -> np.ndarray:
+    def set_init_params(self, *args, **kwargs) -> np.ndarray:
         """Get initial parameters."""
         raise NotImplementedError
 
@@ -39,6 +53,7 @@ class Dist:
 
         Depending on the case can be done closed form or via samples.
         """
+        raise NotImplementedError
 
     def _gradient(self, samples: np.ndarray, fitnesses: np.ndarray) -> np.ndarray:
         """Compute the gradient from the samples and fitnesses."""
