@@ -58,6 +58,10 @@ class Dist:
         """Get initial parameters."""
         raise NotImplementedError
 
+    def get_optimum(self) -> np.ndarray:
+        """Get optimum parameters."""
+        raise NotImplementedError
+
     def _inverse_fisher(self, samples: np.ndarray) -> np.ndarray:
         """Compute inverse Fisher matrix.
 

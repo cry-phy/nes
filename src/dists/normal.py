@@ -66,3 +66,11 @@ class DiagNormal(Dist):
             * self._inverse_fisher(samples)
             * self._gradient(samples, fitnesses)
         )
+
+    def get_optimum(self) -> np.ndarray:
+        """Get optimum parameters."""
+        return self._mean.copy()
+
+    def set_init_params(self, parameters: np.ndarray) -> np.ndarray:
+        """Get initial parameters."""
+        self._params = parameters
