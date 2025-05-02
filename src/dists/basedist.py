@@ -9,6 +9,7 @@ class Dist:
         """Generate Instance of Class."""
         self._num_dimensions = num_dimensions
         self._params = np.empty(0)
+        self._learning_rate = 1
 
     @classmethod
     def from_dimensions(cls, num_dimensions: int) -> "Dist":
@@ -33,6 +34,15 @@ class Dist:
     @parameters.setter
     def parameters(self, value):
         self._params = value
+
+    @property
+    def learning_rate(self):
+        """The learning_rate property."""
+        return self._learning_rate
+
+    @learning_rate.setter
+    def learning_rate(self, value):
+        self._learning_rate = value
 
     def get_samples(self, number: int) -> np.ndarray:
         """Get samples with current parameters."""

@@ -40,7 +40,7 @@ class DiagNormal(Dist):
     def _gradient(self, samples: np.ndarray, fitnesses: np.ndarray) -> np.ndarray:
         """Compute gradient from samples."""
         gradients = np.zeros(shape=(len(samples), self.num_params))
-        diffs = gradients[:, self._num_dimensions :] - self._mean
+        diffs = samples - self._mean
         gradients[:, : self._num_dimensions] = diffs / self._variance
         gradients[:, self._num_dimensions :] = (
             0.5 * (diffs**2 / self._variance - 1) / self._variance
@@ -54,13 +54,15 @@ class DiagNormal(Dist):
         Since there exists a closed form we simply use it here.
         """
         # save fisher as class variable so its not reallocated each time.
-        fisher = self._params.copy()
-        fisher[: self._num_dimensions] = fisher[: self._num_dimensions]
-        fisher[self._num_dimensions :] = 2 * fisher[self._num_dimensions :] ** 2
-        return fisher
+        invfisher = self._params.copy()
+        invfisher[: self._num_dimensions] = invfisher[: self._num_dimensions]
+        invfisher[self._num_dimensions :] = 2 * invfisher[self._num_dimensions :] ** 2
+        return invfisher
 
     def param_variation(self, samples: np.ndarray, fitnesses: np.ndarray) -> None:
         """Get variation of parameters."""
-        self._params += self._inverse_fisher(samples) * self._gradient(
-            samples, fitnesses
+        self._params += (
+            self.learning_rate
+            * self._inverse_fisher(samples)
+            * self._gradient(samples, fitnesses)
         )
