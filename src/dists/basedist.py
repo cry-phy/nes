@@ -34,7 +34,7 @@ class Dist:
     def parameters(self, value):
         self._params = value
 
-    def get_samples(self, parameters: np.ndarray) -> np.ndarray:
+    def get_samples(self, number: int) -> np.ndarray:
         """Get samples with current parameters."""
         raise NotImplementedError
 
@@ -57,3 +57,4 @@ class Dist:
 
     def _gradient(self, samples: np.ndarray, fitnesses: np.ndarray) -> np.ndarray:
         """Compute the gradient from the samples and fitnesses."""
+        raise NotImplementedError
