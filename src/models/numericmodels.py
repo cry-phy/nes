@@ -57,7 +57,20 @@ class Spherical(Model):
 
     def __gen_coefficients(self) -> None:
         """Generate Coefficients for the associated Legendre Polynome."""
-        ...
+        self.__coeff1 = (-1) ** self.m * np.sqrt(
+            (2 * self.l + 1)
+            / (4 * np.pi)
+            * np.special.factorial(self.l - self.m)
+            / np.special.factorial(self.l + self.m)
+        )
+        self.__coeff2 = (-1) ** self.m * 2**self.l
+        ks = np.arange(self.m, self.l + 1)
+        self.__coeff3 = (
+            np.special.factorial(ks)
+            / np.special.factorial(ks - self.m)
+            * np.special.binom(self.l, ks)
+            * np.special.binom(self.l + ks - 1, self.l)
+        )
 
     @property
     def dof(self) -> int:
