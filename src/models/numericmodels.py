@@ -1,5 +1,6 @@
 from models.basemodel import Model
 import numpy as np
+from matplotlib.axes import Axes
 
 
 class NPolynome(Model):
@@ -10,19 +11,19 @@ class NPolynome(Model):
     - Directional scalings
     """
 
-    def __init__(self, num_dims: int, weights: np.ndarray[np.float64]) -> None:
+    def __init__(self, weights: np.ndarray[np.float64]) -> None:
         """Initialize high dimensional parabola.
 
         Weights w up to max order n and dimension d are structured:
-        [
-            [w_00, w_01, ..., w_0d]
-            [w_10, w_11, ..., w_1d]
-            [ ...,  ..., ..., ...,]
-            [w_n0, w_n0, ..., w_nd]
-        ]
+
+        w00, w01, ..., w0d
+        w10, w11, ..., w1d
+        ..., ..., ..., ...
+        wn0, wn0, ..., wnd
+
         """
-        self.num_dims: int = num_dims
         self.weights: np.ndarray[np.float64] = weights
+        self.num_dims: int = weights.shape[1]
 
     @property
     def dof(self) -> int:
@@ -43,7 +44,7 @@ class NPolynome(Model):
 
 
 class Spherical(Model):
-    """Spherical Harmonics."""
+    """Real Part Spherical Harmonic."""
 
     def __init__(self, l_order: int, m_order: int) -> None:
         """Initialize Spherical Harmonic of order l, m."""
@@ -51,9 +52,10 @@ class Spherical(Model):
         self.l: int = l_order
         self.m: int = m_order
 
-    def __ass_legendre(self, value: float) -> float:
-        """Evaluate associated Legendre Polynome."""
-        ...
+        self.__gen_coefficients()
+        self.polynome: NPolynome = NPolynome(
+            weights=self.__coeff3.reshape(self.l - self.m + 1, 1)
+        )
 
     def __gen_coefficients(self) -> None:
         """Generate Coefficients for the associated Legendre Polynome."""
@@ -69,7 +71,15 @@ class Spherical(Model):
             np.special.factorial(ks)
             / np.special.factorial(ks - self.m)
             * np.special.binom(self.l, ks)
-            * np.special.binom(self.l + ks - 1, self.l)
+            * np.special.binom((self.l + ks - 1) / 2, self.l)
+        )
+
+    def __ass_legendre(self, values: np.ndarray[np.float64]) -> np.ndarray[np.float64]:
+        """Evaluate associated Legendre Polynome."""
+        return (
+            self.__coeff2
+            * (1 - values) ** (self.m / 2)
+            * self.polynome.evaluate_samples(values)
         )
 
     @property
@@ -81,8 +91,33 @@ class Spherical(Model):
         self, samples: np.ndarray[np.float64]
     ) -> np.ndarray[np.float64]:
         """Evaluate list of samples and return fitness in order."""
-        raise NotImplementedError
+        return (
+            self.__coeff1
+            * self.__ass_legendre(np.cos(samples[:, 1]))
+            * np.cos(self.m * samples[:, 0])
+        )
 
     def initial_guess(self) -> np.ndarray:
         """Make initial guess for sample."""
         raise NotImplementedError
+
+    def plot_fitness(
+        self,
+        ax: Axes,
+        lower: np.ndarray[np.float64],
+        upper: np.ndarray[np.float64],
+    ) -> None:
+        """Display the fitness."""
+        n: int = 101
+        phis: np.ndarray = np.linspace(lower[0], upper[0], n)
+        thetas: np.ndarray = np.linspace(lower[1], upper[1], n)
+        x, y = np.meshgrid(phis, thetas)
+        samples = np.array(x, y).reshape(2, -1).T
+        fitness = self.evaluate_samples(samples)
+        ax.contourf(x, y, fitness, levels=50, cmap="")
+
+    def plot_samples(self, ax: Axes, samples: np.ndarray[np.float64]) -> None:
+        """Display the samples."""
+        phis: np.ndarray = samples[:, 0]
+        thetas: np.ndarray = samples[:, 1]
+        ax.scatter(phis, thetas, s=40, facecolors="none", edgecolors="b", cmap="plasma")
