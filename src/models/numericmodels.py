@@ -1,5 +1,6 @@
 from models.basemodel import Model
 import numpy as np
+from scipy import special
 from matplotlib.axes import Axes
 
 
@@ -11,7 +12,10 @@ class NPolynome(Model):
     - Directional scalings
     """
 
-    def __init__(self, weights: np.ndarray[np.float64]) -> None:
+    def __init__(
+        self,
+        weights: np.ndarray[np.float64],
+    ) -> None:
         """Initialize high dimensional parabola.
 
         Weights w up to max order n and dimension d are structured:
@@ -22,6 +26,9 @@ class NPolynome(Model):
         wn0, wn0, ..., wnd
 
         """
+        upper = np.full(weights.shape[1], np.inf)
+        lower = np.full(weights.shape[1], -np.inf)
+        super().__init__(lower, upper)
         self.weights: np.ndarray[np.float64] = weights
         self.num_dims: int = weights.shape[1]
 
@@ -35,7 +42,7 @@ class NPolynome(Model):
     ) -> np.ndarray[np.float64]:
         """Evaluate list of samples and return fitness in order.
 
-        Broadcasting is a bitch. Counter: 2.5h
+        Broadcasting is a bitch. Counter: 2.5h.
         """
         orders = np.arange(self.weights.shape[0])
         weights_expanded = self.weights.T[np.newaxis, :, :]
@@ -62,16 +69,16 @@ class Spherical(Model):
         self.__coeff1 = (-1) ** self.m * np.sqrt(
             (2 * self.l + 1)
             / (4 * np.pi)
-            * np.special.factorial(self.l - self.m)
-            / np.special.factorial(self.l + self.m)
+            * special.factorial(self.l - self.m)
+            / special.factorial(self.l + self.m)
         )
         self.__coeff2 = (-1) ** self.m * 2**self.l
         ks = np.arange(self.m, self.l + 1)
         self.__coeff3 = (
-            np.special.factorial(ks)
-            / np.special.factorial(ks - self.m)
-            * np.special.binom(self.l, ks)
-            * np.special.binom((self.l + ks - 1) / 2, self.l)
+            special.factorial(ks)
+            / special.factorial(ks - self.m)
+            * special.binom(self.l, ks)
+            * special.binom((self.l + ks - 1) / 2, self.l)
         )
 
     def __ass_legendre(self, values: np.ndarray[np.float64]) -> np.ndarray[np.float64]:

@@ -5,7 +5,8 @@ import numpy as np
 class DiagNormal(Dist):
     """Multivariate Normal distribution.
 
-    Limited to diagonal covariance for now as there exists a closed form of cdf."""
+    Limited to diagonal covariance for now as there exists a closed form of cdf.
+    """
 
     def __init__(self, num_dimensions: int) -> None:
         """Initialize instance of Normal distribution.
