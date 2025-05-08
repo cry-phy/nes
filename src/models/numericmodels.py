@@ -26,8 +26,8 @@ class NPolynome(Model):
         wn0, wn0, ..., wnd
 
         """
-        upper = np.full(weights.shape[1], np.inf)
         lower = np.full(weights.shape[1], -np.inf)
+        upper = np.full(weights.shape[1], np.inf)
         super().__init__(lower, upper)
         self.weights: np.ndarray[np.float64] = weights
         self.num_dims: int = weights.shape[1]
@@ -42,12 +42,33 @@ class NPolynome(Model):
     ) -> np.ndarray[np.float64]:
         """Evaluate list of samples and return fitness in order.
 
-        Broadcasting is a bitch. Counter: 2.5h.
+        Broadcasting is a bitch. Counter: 3h.
         """
         orders = np.arange(self.weights.shape[0])
         weights_expanded = self.weights.T[np.newaxis, :, :]
         exponentiated = samples[:, :, np.newaxis] ** orders[np.newaxis, np.newaxis, :]
-        return (weights_expanded * exponentiated).sum(axis=(1, 2))
+        return (weights_expanded * exponentiated).sum(axis=(1, 2)).reshape(-1, 1)
+
+    def plot_fitness(
+        self,
+        ax: Axes,
+        lower: np.ndarray[np.float64],
+        upper: np.ndarray[np.float64],
+    ) -> None:
+        """Display the fitness against the first two dimensions."""
+        n: int = 101
+        xs: np.ndarray = np.linspace(lower[0], upper[0], n)
+        ys: np.ndarray = np.linspace(lower[1], upper[1], n)
+        x, y = np.meshgrid(xs, ys)
+        samples = np.array([x, y]).reshape(2, -1).T
+        fitness = self.evaluate_samples(samples).reshape(x.shape)
+        ax.contourf(x, y, fitness, levels=50, cmap="plasma")
+
+    def plot_samples(self, ax: Axes, samples: np.ndarray[np.float64]) -> None:
+        """Display the first two dimensions of samples."""
+        phis: np.ndarray = samples[:, 0]
+        thetas: np.ndarray = samples[:, 1]
+        ax.scatter(phis, thetas, s=40, facecolors="none", edgecolors="b")
 
 
 class Spherical(Model):
@@ -55,7 +76,11 @@ class Spherical(Model):
 
     def __init__(self, l_order: int, m_order: int) -> None:
         """Initialize Spherical Harmonic of order l, m."""
-        super().__init__()
+        if l_order < m_order:
+            raise ValueError("Order l must be larger than order m")
+        lower = np.array([0, 0])
+        upper = np.array([2 * np.pi, np.pi])
+        super().__init__(lower, upper)
         self.l: int = l_order
         self.m: int = m_order
 
@@ -85,7 +110,7 @@ class Spherical(Model):
         """Evaluate associated Legendre Polynome."""
         return (
             self.__coeff2
-            * (1 - values) ** (self.m / 2)
+            * (1 - values**2) ** (self.m / 2)
             * self.polynome.evaluate_samples(values)
         )
 
@@ -100,13 +125,9 @@ class Spherical(Model):
         """Evaluate list of samples and return fitness in order."""
         return (
             self.__coeff1
-            * self.__ass_legendre(np.cos(samples[:, 1]))
-            * np.cos(self.m * samples[:, 0])
+            * self.__ass_legendre(np.cos(samples[:, 1]).reshape(-1, 1))
+            * np.cos(2 * self.m * samples[:, 0].reshape(-1, 1))
         )
-
-    def initial_guess(self) -> np.ndarray:
-        """Make initial guess for sample."""
-        raise NotImplementedError
 
     def plot_fitness(
         self,
@@ -119,12 +140,12 @@ class Spherical(Model):
         phis: np.ndarray = np.linspace(lower[0], upper[0], n)
         thetas: np.ndarray = np.linspace(lower[1], upper[1], n)
         x, y = np.meshgrid(phis, thetas)
-        samples = np.array(x, y).reshape(2, -1).T
-        fitness = self.evaluate_samples(samples)
-        ax.contourf(x, y, fitness, levels=50, cmap="")
+        samples = np.array([x, y]).reshape(2, -1).T
+        fitness = self.evaluate_samples(samples).reshape(x.shape)
+        ax.contourf(x, y, fitness, levels=50, cmap="plasma")
 
     def plot_samples(self, ax: Axes, samples: np.ndarray[np.float64]) -> None:
         """Display the samples."""
         phis: np.ndarray = samples[:, 0]
         thetas: np.ndarray = samples[:, 1]
-        ax.scatter(phis, thetas, s=40, facecolors="none", edgecolors="b", cmap="plasma")
+        ax.scatter(phis, thetas, s=40, facecolors="none", edgecolors="b")
