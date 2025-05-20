@@ -1,5 +1,6 @@
 from dists.basedist import Dist
 import numpy as np
+import numpy.typing as npt
 
 
 class DiagNormal(Dist):
@@ -14,15 +15,15 @@ class DiagNormal(Dist):
         Use factory methods instead!
         """
         super().__init__(num_dimensions)
-        self._params: np.float64 = np.zeros(2 * num_dimensions)
+        self._params: npt.NDArray[np.float64] = np.zeros(2 * num_dimensions)
 
     @property
-    def _mean(self) -> np.ndarray[np.float64]:
+    def _mean(self) -> npt.NDArray[np.float64]:
         """The mean value."""
         return self._params[: self._num_dimensions]
 
     @property
-    def _variance(self) -> np.ndarray[np.float64]:
+    def _variance(self) -> npt.NDArray[np.float64]:
         """The dimensional sigmas."""
         return self._params[self._num_dimensions :]
 
@@ -33,12 +34,12 @@ class DiagNormal(Dist):
             raise ValueError("Must be more than 0 dimensions.")
         return cls(num_dimensions)
 
-    def get_samples(self, number: int) -> np.ndarray[np.float64]:
+    def get_samples(self, number: int) -> npt.NDArray[np.float64]:
         """Generate samples."""
         z = np.random.randn(number, self._num_dimensions)
         return self._mean + z * np.sqrt(self._variance)
 
-    def _gradient(self, samples: np.ndarray, fitnesses: np.ndarray) -> np.ndarray:
+    def _gradient(self, samples: npt.NDArray, fitnesses: npt.NDArray) -> npt.NDArray:
         """Compute gradient from samples."""
         gradients = np.zeros(shape=(len(samples), self.num_params))
         diffs = samples - self._mean
@@ -49,7 +50,7 @@ class DiagNormal(Dist):
         weighted_gradients = gradients.T * fitnesses / fitnesses.sum()
         return weighted_gradients.T.sum(axis=0)
 
-    def _inverse_fisher(self, samples: np.ndarray) -> np.ndarray:
+    def _inverse_fisher(self, samples: npt.NDArray) -> npt.NDArray:
         """Compute Fisher matrix.
 
         Since there exists a closed form we simply use it here.
@@ -60,7 +61,7 @@ class DiagNormal(Dist):
         invfisher[self._num_dimensions :] = 2 * invfisher[self._num_dimensions :] ** 2
         return invfisher
 
-    def param_variation(self, samples: np.ndarray, fitnesses: np.ndarray) -> None:
+    def param_variation(self, samples: npt.NDArray, fitnesses: npt.NDArray) -> None:
         """Get variation of parameters."""
         self._params += (
             self.learning_rate
@@ -68,10 +69,10 @@ class DiagNormal(Dist):
             * self._gradient(samples, fitnesses)
         )
 
-    def get_optimum(self) -> np.ndarray:
+    def get_optimum(self) -> npt.NDArray:
         """Get optimum parameters."""
         return self._mean.copy()
 
-    def set_init_params(self, parameters: np.ndarray) -> np.ndarray:
+    def set_init_params(self, parameters: npt.NDArray) -> None:
         """Get initial parameters."""
         self._params = parameters

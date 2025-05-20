@@ -1,5 +1,6 @@
 from models.basemodel import Model
 import numpy as np
+import numpy.typing as npt
 from scipy import special
 from matplotlib.axes import Axes
 
@@ -14,7 +15,7 @@ class NPolynome(Model):
 
     def __init__(
         self,
-        weights: np.ndarray[np.float64],
+        weights: npt.NDArray[np.float64],
     ) -> None:
         """Initialize high dimensional parabola.
 
@@ -29,7 +30,7 @@ class NPolynome(Model):
         lower = np.full(weights.shape[1], -np.inf)
         upper = np.full(weights.shape[1], np.inf)
         super().__init__(lower, upper)
-        self.weights: np.ndarray[np.float64] = weights
+        self.weights: npt.NDArray[np.float64] = weights
         self.num_dims: int = weights.shape[1]
 
     @property
@@ -38,8 +39,8 @@ class NPolynome(Model):
         return self.num_dims
 
     def evaluate_samples(
-        self, samples: np.ndarray[np.float64]
-    ) -> np.ndarray[np.float64]:
+        self, samples: npt.NDArray[np.float64]
+    ) -> npt.NDArray[np.float64]:
         """Evaluate list of samples and return fitness in order.
 
         Broadcasting is a bitch. Counter: 3h.
@@ -52,22 +53,22 @@ class NPolynome(Model):
     def plot_fitness(
         self,
         ax: Axes,
-        lower: np.ndarray[np.float64],
-        upper: np.ndarray[np.float64],
+        lower: npt.NDArray[np.float64],
+        upper: npt.NDArray[np.float64],
     ) -> None:
         """Display the fitness against the first two dimensions."""
         n: int = 101
-        xs: np.ndarray = np.linspace(lower[0], upper[0], n)
-        ys: np.ndarray = np.linspace(lower[1], upper[1], n)
+        xs: npt.NDArray = np.linspace(lower[0], upper[0], n)
+        ys: npt.NDArray = np.linspace(lower[1], upper[1], n)
         x, y = np.meshgrid(xs, ys)
         samples = np.array([x, y]).reshape(2, -1).T
         fitness = self.evaluate_samples(samples).reshape(x.shape)
         ax.contourf(x, y, fitness, levels=50, cmap="plasma")
 
-    def plot_samples(self, ax: Axes, samples: np.ndarray[np.float64]) -> None:
+    def plot_samples(self, ax: Axes, samples: npt.NDArray[np.float64]) -> None:
         """Display the first two dimensions of samples."""
-        phis: np.ndarray = samples[:, 0]
-        thetas: np.ndarray = samples[:, 1]
+        phis: npt.NDArray = samples[:, 0]
+        thetas: npt.NDArray = samples[:, 1]
         ax.scatter(phis, thetas, s=40, facecolors="none", edgecolors="b")
 
 
@@ -106,7 +107,9 @@ class Spherical(Model):
             * special.binom((self.l + ks - 1) / 2, self.l)
         )
 
-    def __ass_legendre(self, values: np.ndarray[np.float64]) -> np.ndarray[np.float64]:
+    def __ass_legendre(
+        self, values: npt.NDArray[np.float64]
+    ) -> npt.NDArray[np.float64]:
         """Evaluate associated Legendre Polynome."""
         return (
             self.__coeff2
@@ -120,8 +123,8 @@ class Spherical(Model):
         return 2
 
     def evaluate_samples(
-        self, samples: np.ndarray[np.float64]
-    ) -> np.ndarray[np.float64]:
+        self, samples: npt.NDArray[np.float64]
+    ) -> npt.NDArray[np.float64]:
         """Evaluate list of samples and return fitness in order."""
         return (
             self.__coeff1
@@ -132,20 +135,20 @@ class Spherical(Model):
     def plot_fitness(
         self,
         ax: Axes,
-        lower: np.ndarray[np.float64],
-        upper: np.ndarray[np.float64],
+        lower: npt.NDArray[np.float64],
+        upper: npt.NDArray[np.float64],
     ) -> None:
         """Display the fitness."""
         n: int = 101
-        phis: np.ndarray = np.linspace(lower[0], upper[0], n)
-        thetas: np.ndarray = np.linspace(lower[1], upper[1], n)
+        phis: npt.NDArray = np.linspace(lower[0], upper[0], n)
+        thetas: npt.NDArray = np.linspace(lower[1], upper[1], n)
         x, y = np.meshgrid(phis, thetas)
         samples = np.array([x, y]).reshape(2, -1).T
         fitness = self.evaluate_samples(samples).reshape(x.shape)
         ax.contourf(x, y, fitness, levels=50, cmap="plasma")
 
-    def plot_samples(self, ax: Axes, samples: np.ndarray[np.float64]) -> None:
+    def plot_samples(self, ax: Axes, samples: npt.NDArray[np.float64]) -> None:
         """Display the samples."""
-        phis: np.ndarray = samples[:, 0]
-        thetas: np.ndarray = samples[:, 1]
+        phis: npt.NDArray = samples[:, 0]
+        thetas: npt.NDArray = samples[:, 1]
         ax.scatter(phis, thetas, s=40, facecolors="none", edgecolors="b")
