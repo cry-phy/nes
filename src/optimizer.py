@@ -71,7 +71,7 @@ class Optimizer:
         else:
             raise ConvergenceError(f"Optimizer did not converge in {self._max_steps}.")
         opt_loc = self.dist.get_optimum()
-        opt_fit = self.model.evaluate_samples([opt_loc])[0]
+        opt_fit = self.model.evaluate_samples(opt_loc)[0]
         return opt_loc, opt_fit
 
 
@@ -135,7 +135,7 @@ class VizOptimizer(Optimizer):
     def plot_fitness(self):
         """Plot fitness over the search area."""
         axes = cast(Axes, self.ax)
-        self.model.plot_fitness(axes, self.__samples)
+        self.model.plot_fitness(axes, self.model.lower, self.model.upper)
 
     @req_axes
     def step(self) -> None:

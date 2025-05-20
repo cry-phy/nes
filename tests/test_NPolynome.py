@@ -1,0 +1,32 @@
+from models import NPolynome
+import numpy as np
+from numpy.testing import assert_allclose
+
+
+def test_1d_linear():
+    """Ensure 1 dimensional linear polynome works as expected."""
+    gradient = 3
+    y_offset = -1
+    params = np.array([[y_offset], [gradient]])
+    model = NPolynome(params)
+    samples = np.arange(-10, 10).reshape(-1, 1)
+    values = model.evaluate_samples(samples)
+    check_values = gradient * samples + y_offset
+    assert_allclose(check_values, values)
+
+
+def test_nd_linear():
+    """Ensure n dimensional linear polynome works as expected."""
+    np.random.seed(0)
+    dims = 10
+    num_samples = 100
+    gradients = np.random.random(dims) * 2 - 1
+    y_offsets = np.random.random(dims) * 2 - 1
+    params = np.array([y_offsets, gradients])
+    model = NPolynome(params)
+    samples = np.random.random((num_samples, dims))
+    values = model.evaluate_samples(samples)
+    check_values = np.array(
+        [sum(gradients * sample + y_offsets) for sample in samples]
+    ).reshape(-1, 1)
+    assert_allclose(check_values, values)

@@ -53,7 +53,7 @@ class Model(ABC):
         return np.array((self._lower, self._upper))
 
     def plot_fitness(
-        self, ax: Axes, lower: npt.NDArray[np.float64], upper: np.NDArray[np.float64]
+        self, ax: Axes, lower: npt.NDArray[np.float64], upper: npt.NDArray[np.float64]
     ) -> None:
         """Display the fitness.
 

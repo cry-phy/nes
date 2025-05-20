@@ -1,5 +1,6 @@
 from models.basemodel import Model
 import numpy as np
+import numpy.typing as npt
 from abc import ABC, abstractmethod
 
 
@@ -49,34 +50,40 @@ class Dist(ABC):
         self._learning_rate = value
 
     @abstractmethod
-    def get_samples(self, number: int) -> np.ndarray:
+    def get_samples(self, number: int) -> npt.NDArray[np.float64]:
         """Get samples with current parameters."""
         pass
 
     @abstractmethod
-    def param_variation(self, samples: np.ndarray, fitnesses: np.ndarray) -> None:
+    def param_variation(
+        self, samples: npt.NDArray[np.float64], fitnesses: npt.NDArray[np.float64]
+    ) -> None:
         """Get variation of parameters."""
         self._params += self._inverse_fisher(samples) @ self._gradient(
             samples, fitnesses
         )
 
     @abstractmethod
-    def set_init_params(self, *args, **kwargs) -> np.ndarray:
+    def set_init_params(self, *args, **kwargs) -> npt.NDArray[np.float64]:
         """Get initial parameters."""
         pass
 
     @abstractmethod
-    def get_optimum(self) -> np.ndarray:
+    def get_optimum(self) -> npt.NDArray[np.float64]:
         """Get optimum parameters."""
         pass
 
-    def _inverse_fisher(self, samples: np.ndarray) -> np.ndarray:
+    def _inverse_fisher(
+        self, samples: npt.NDArray[np.float64]
+    ) -> npt.NDArray[np.float64]:
         """Compute inverse Fisher matrix.
 
         Depending on the case can be done closed form or via samples.
         """
         raise NotImplementedError
 
-    def _gradient(self, samples: np.ndarray, fitnesses: np.ndarray) -> np.ndarray:
+    def _gradient(
+        self, samples: npt.NDArray[np.float64], fitnesses: npt.NDArray[np.float64]
+    ) -> npt.NDArray[np.float64]:
         """Compute the gradient from the samples and fitnesses."""
         raise NotImplementedError
