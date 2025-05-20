@@ -73,7 +73,10 @@ class NPolynome(Model):
 
 
 class Spherical(Model):
-    """Real Part Spherical Harmonic."""
+    """Real Part Spherical Harmonic.
+
+    2 DOF: [Phi, Theta]
+    """
 
     def __init__(self, l_order: int, m_order: int) -> None:
         """Initialize Spherical Harmonic of order l, m."""
