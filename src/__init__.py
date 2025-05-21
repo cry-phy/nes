@@ -1,8 +1,8 @@
 """Top level module."""
 
-import models
-import dists
-from optimizer import Optimizer, VizOptimizer
+from . import models
+from . import dists
+from .optimizer import Optimizer, VizOptimizer
 
 __all__ = [
     "Optimizer",

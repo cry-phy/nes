@@ -3,6 +3,7 @@ from typing import Callable
 from dists.basedist import Dist
 from models.basemodel import Model
 import numpy as np
+import numpy.typing as npt
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure, SubFigure
@@ -29,7 +30,7 @@ class Optimizer:
         self._tolerance: float = 1e-3
         self.decider: Callable[[], bool] = self.gradient_decider
 
-        self._gradient: np.ndarray[np.float64] = np.array([np.inf])
+        self._gradient: npt.NDArray[np.float64] = np.array([np.inf])
 
         self._max_steps: int = 1000
 

@@ -1,4 +1,4 @@
-from dists.basedist import Dist
+from dists import Dist
 import numpy as np
 import numpy.typing as npt
 

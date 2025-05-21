@@ -1,4 +1,4 @@
-from models.basemodel import Model
+from models import Model
 import numpy as np
 import numpy.typing as npt
 from scipy import special
