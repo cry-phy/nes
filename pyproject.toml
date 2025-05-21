@@ -16,13 +16,16 @@ dependencies = [
 ]
 
 [tool.poetry]
+packages = [
+    { include = "nes", from = "src" }
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "B", "W", "Q"]
 ignore = ["E501"]
 [tool.pytest.ini_options]
 pythonpath = [
-  "src",
+  "nes",
   "tests",
 ]
 

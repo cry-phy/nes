@@ -1,4 +1,4 @@
-from models.basemodel import Model
+from nes.models import Model
 import numpy as np
 import numpy.typing as npt
 from abc import ABC, abstractmethod
@@ -14,14 +14,14 @@ class Dist(ABC):
         self._params = np.empty(0)
         self._learning_rate = 1
 
-    @abstractmethod
     @classmethod
+    @abstractmethod
     def from_dimensions(cls, num_dimensions: int) -> "Dist":
         """Generate a distribution from the number of dimensins of a Model."""
         pass
 
-    @abstractmethod
     @classmethod
+    @abstractmethod
     def from_model(cls, model: Model) -> "Dist":
         """Generate a model from a Model directly."""
         pass

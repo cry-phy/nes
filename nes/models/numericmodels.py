@@ -1,4 +1,4 @@
-from models import Model
+from nes.models import Model
 import numpy as np
 import numpy.typing as npt
 from scipy import special

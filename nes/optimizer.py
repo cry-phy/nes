@@ -1,7 +1,7 @@
 from functools import wraps
 from typing import Callable
-from dists.basedist import Dist
-from models.basemodel import Model
+from nes.dists import Dist
+from nes.models import Model
 import numpy as np
 import numpy.typing as npt
 from matplotlib import pyplot as plt

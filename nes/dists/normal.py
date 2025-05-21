@@ -1,4 +1,5 @@
-from dists import Dist
+from nes.dists import Dist
+from nes.models import Model
 import numpy as np
 import numpy.typing as npt
 
@@ -34,6 +35,17 @@ class DiagNormal(Dist):
             raise ValueError("Must be more than 0 dimensions.")
         return cls(num_dimensions)
 
+    @classmethod
+    def from_model(cls, model: Model) -> "Dist":
+        """Generate a model from a Model directly."""
+        lower, upper = model.search_range()
+        instance = cls(len(lower))
+        means = upper - lower / 2
+        variances = np.sqrt(upper - lower)
+        params = np.concatenate(means, variances)
+        instance.set_init_params(params)
+        return instance
+
     def get_samples(self, number: int) -> npt.NDArray[np.float64]:
         """Generate samples."""
         z = np.random.randn(number, self._num_dimensions)
@@ -61,7 +73,9 @@ class DiagNormal(Dist):
         invfisher[self._num_dimensions :] = 2 * invfisher[self._num_dimensions :] ** 2
         return invfisher
 
-    def param_variation(self, samples: npt.NDArray, fitnesses: npt.NDArray) -> None:
+    def param_variation(
+        self, samples: npt.NDArray[np.float64], fitnesses: npt.NDArray[np.float64]
+    ) -> None:
         """Get variation of parameters."""
         self._params += (
             self.learning_rate
@@ -69,10 +83,10 @@ class DiagNormal(Dist):
             * self._gradient(samples, fitnesses)
         )
 
-    def get_optimum(self) -> npt.NDArray:
+    def get_optimum(self) -> npt.NDArray[np.float64]:
         """Get optimum parameters."""
         return self._mean.copy()
 
-    def set_init_params(self, parameters: npt.NDArray) -> None:
+    def set_init_params(self, parameters: npt.NDArray[np.float64]) -> None:
         """Get initial parameters."""
         self._params = parameters

@@ -1,4 +1,4 @@
-from dists import Dist
+from nes.dists import Dist
 
 
 class Laplace(Dist):
