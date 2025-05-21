@@ -40,9 +40,9 @@ class DiagNormal(Dist):
         """Generate a model from a Model directly."""
         lower, upper = model.search_range()
         instance = cls(len(lower))
-        means = upper - lower / 2
-        variances = np.sqrt(upper - lower)
-        params = np.concatenate(means, variances)
+        means = (upper + lower) / 2
+        variances = ((upper - lower) / 2 / 3) ** 2
+        params = np.concatenate((means.reshape(-1), variances.reshape(-1)))
         instance.set_init_params(params)
         return instance
 
@@ -59,8 +59,8 @@ class DiagNormal(Dist):
         gradients[:, self._num_dimensions :] = (
             0.5 * (diffs**2 / self._variance - 1) / self._variance
         )
-        weighted_gradients = gradients.T * fitnesses / fitnesses.sum()
-        return weighted_gradients.T.sum(axis=0)
+        weighted_gradients = gradients * fitnesses / fitnesses.sum()
+        return weighted_gradients.sum(axis=0)
 
     def _inverse_fisher(self, samples: npt.NDArray) -> npt.NDArray:
         """Compute Fisher matrix.
@@ -75,13 +75,15 @@ class DiagNormal(Dist):
 
     def param_variation(
         self, samples: npt.NDArray[np.float64], fitnesses: npt.NDArray[np.float64]
-    ) -> None:
+    ) -> npt.NDArray[np.float64]:
         """Get variation of parameters."""
-        self._params += (
+        variation = -(
             self.learning_rate
             * self._inverse_fisher(samples)
             * self._gradient(samples, fitnesses)
         )
+        self._params += variation
+        return variation
 
     def get_optimum(self) -> npt.NDArray[np.float64]:
         """Get optimum parameters."""
