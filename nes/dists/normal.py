@@ -10,6 +10,9 @@ class DiagNormal(Dist):
     Limited to diagonal covariance for now as there exists a closed form of cdf.
     """
 
+    var_eps = 1e-8
+    alpha = 0.2
+
     def __init__(self, num_dimensions: int) -> None:
         """Initialize instance of Normal distribution.
 
@@ -28,6 +31,10 @@ class DiagNormal(Dist):
         """The dimensional sigmas."""
         return self._params[self._num_dimensions :]
 
+    def safe_variance(self) -> npt.NDArray[np.float64]:
+        """Limit variance to positive values."""
+        return np.maximum(self._variance, self.var_eps)
+
     @classmethod
     def from_dimensions(cls, num_dimensions: int) -> "DiagNormal":
         """Generate Normal distribution with number of dimensions."""
@@ -44,6 +51,7 @@ class DiagNormal(Dist):
         variances = ((upper - lower) / 2 / 3) ** 2
         params = np.concatenate((means.reshape(-1), variances.reshape(-1)))
         instance.set_init_params(params)
+        instance._learning_rate = 0.2 / model.dof**0.5
         return instance
 
     def get_samples(self, number: int) -> npt.NDArray[np.float64]:
@@ -55,11 +63,12 @@ class DiagNormal(Dist):
         """Compute gradient from samples."""
         gradients = np.zeros(shape=(len(samples), self.num_params))
         diffs = samples - self._mean
-        gradients[:, : self._num_dimensions] = diffs / self._variance
+        gradients[:, : self._num_dimensions] = diffs / self.safe_variance()
         gradients[:, self._num_dimensions :] = (
-            0.5 * (diffs**2 / self._variance - 1) / self._variance
+            0.5 * (diffs**2 / self.safe_variance() - 1) / self.safe_variance()
         )
-        weighted_gradients = gradients * fitnesses / fitnesses.sum()
+        adjusted_fitness = fitnesses - fitnesses.min()
+        weighted_gradients = gradients * (adjusted_fitness / adjusted_fitness.sum())
         return weighted_gradients.sum(axis=0)
 
     def _inverse_fisher(self, samples: npt.NDArray) -> npt.NDArray:
@@ -67,7 +76,6 @@ class DiagNormal(Dist):
 
         Since there exists a closed form we simply use it here.
         """
-        # save fisher as class variable so its not reallocated each time.
         invfisher = self._params.copy()
         invfisher[: self._num_dimensions] = invfisher[: self._num_dimensions]
         invfisher[self._num_dimensions :] = 2 * invfisher[self._num_dimensions :] ** 2
@@ -78,11 +86,18 @@ class DiagNormal(Dist):
     ) -> npt.NDArray[np.float64]:
         """Get variation of parameters."""
         variation = -(
-            self.learning_rate
-            * self._inverse_fisher(samples)
-            * self._gradient(samples, fitnesses)
+            self._inverse_fisher(samples) * self._gradient(samples, fitnesses)
         )
-        self._params += variation
+        norm = np.linalg.norm(variation)
+        eta = self.learning_rate / np.sqrt(1 + (self.alpha * norm) ** 2)
+        print(eta)
+        self._params += eta * variation
+        # need to clamp variance positive
+        self._params[self._num_dimensions :] = np.maximum(
+            self._params[self._num_dimensions :], self.var_eps
+        )
+        print(self.parameters)
+        print(variation)
         return variation
 
     def get_optimum(self) -> npt.NDArray[np.float64]:

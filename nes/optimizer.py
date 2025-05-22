@@ -68,7 +68,9 @@ class Optimizer:
     def step(self) -> None:
         """Perform one step of optimization."""
         samples = self.dist.get_samples(self.sample_num)
+        # print("opt:", samples)
         fitness = self.model.evaluate_samples(samples)
+        # print("opt:", fitness)
         variation = self.dist.param_variation(samples, fitness)
 
         self._prev_samples.appendleft(samples)
@@ -166,7 +168,6 @@ class VizOptimizer(Optimizer):
     def plot_fitness(self):
         """Plot fitness over the search area."""
         axes = cast(Axes, self.ax)
-
         self.model.plot_fitness(axes, self.model.lower, self.model.upper)
 
     @req_axes
