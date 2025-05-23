@@ -3,9 +3,8 @@
 Provides access to Base and a few more Models.
 """
 
-from .basemodel import Model
+from .basemodel import Model, Composite
 from .numericmodels import NPolynome, Spherical
-from .composite import Composite
 
 __all__ = [
     "Composite",
