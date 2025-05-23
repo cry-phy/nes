@@ -71,7 +71,7 @@ class Model(ABC):
 
     def __add__(self, other: "Model") -> "Composite":
         """Generate a composite model from two models."""
-        return Composite.from_iter([self, other])
+        return Composite.add_iter([self, other])
 
 
 class Composite(Model):
@@ -86,7 +86,7 @@ class Composite(Model):
         self._models = []
 
     @classmethod
-    def from_iter(cls, iterable: Iterable[Model]) -> "Composite":
+    def add_iter(cls, iterable: Iterable[Model]) -> "Composite":
         """Generate a composite model from a list of model."""
         dof = next(iter(iterable)).dof
         upper = np.full(dof, np.inf)
@@ -98,7 +98,7 @@ class Composite(Model):
             lower = np.minimum(lower, model.lower)
         instance = cls(lower, upper)
         instance._dof = dof
-        instance._models = list[iterable]
+        instance._models = list(iterable)
         return instance
 
     def dof(self):

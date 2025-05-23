@@ -87,14 +87,11 @@ class DiagNormal(Dist):
         )
         norm = np.linalg.norm(variation)
         eta = self.learning_rate / np.sqrt(1 + (self.alpha * norm) ** 2)
-        print(eta)
         self._params += eta * variation
         # need to clamp variance positive
         self._params[self._num_dimensions :] = np.maximum(
             self._params[self._num_dimensions :], self.var_eps
         )
-        print(self.parameters)
-        print(variation)
         return variation
 
     def get_optimum(self) -> npt.NDArray[np.float64]:
