@@ -24,12 +24,12 @@ class DiagNormal(Dist):
     @property
     def _mean(self) -> npt.NDArray[np.float64]:
         """The mean value."""
-        return self._params[: self._num_dimensions]
+        return self._params[: self._num_dimensions].copy()
 
     @property
     def _variance(self) -> npt.NDArray[np.float64]:
         """The dimensional sigmas."""
-        return self._params[self._num_dimensions :]
+        return self._params[self._num_dimensions :].copy()
 
     def safe_variance(self) -> npt.NDArray[np.float64]:
         """Limit variance to positive values."""
@@ -38,8 +38,6 @@ class DiagNormal(Dist):
     @classmethod
     def from_dimensions(cls, num_dimensions: int) -> "DiagNormal":
         """Generate Normal distribution with number of dimensions."""
-        if num_dimensions < 1:
-            raise ValueError("Must be more than 0 dimensions.")
         return cls(num_dimensions)
 
     @classmethod
@@ -51,7 +49,6 @@ class DiagNormal(Dist):
         variances = ((upper - lower) / 2 / 3) ** 2
         params = np.concatenate((means.reshape(-1), variances.reshape(-1)))
         instance.set_init_params(params)
-        instance._learning_rate = 0.2 / model.dof**0.5
         return instance
 
     def get_samples(self, number: int) -> npt.NDArray[np.float64]:
