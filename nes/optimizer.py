@@ -1,3 +1,4 @@
+from collections import deque
 from functools import wraps
 from typing import Callable
 from nes.dists import Dist
@@ -26,13 +27,14 @@ class Optimizer:
         self.dist: Dist = dist
 
         self.sample_num = sample_num
+        self._max_steps: int = int(5e3)
 
         self._tolerance: float = 1e-3
         self.decider: Callable[[], bool] = self.gradient_decider
 
-        self._gradient: npt.NDArray[np.float64] = np.array([np.inf])
-
-        self._max_steps: int = 1000
+        self._prev_samples: deque[npt.NDArray[np.float64]] = deque(maxlen=10)
+        self._prev_fitnesses: deque[npt.NDArray[np.float64]] = deque(maxlen=10)
+        self._prev_variation: deque[npt.NDArray[np.float64]] = deque(maxlen=10)
 
     @property
     def tolerance(self) -> float:
@@ -54,24 +56,40 @@ class Optimizer:
 
     def gradient_decider(self) -> bool:
         """Decide continuation based on tolerance in gradient."""
-        return self._gradient.sum() > self.tolerance
+        return np.sqrt((self._prev_variation[0] ** 2).sum()) < self.tolerance
+
+    def diff_decider(self) -> bool:
+        """Decide continuation based on tolerance in gradient."""
+        prev_diff = self._prev_samples[0].mean(axis=0) - self._prev_samples[1].mean(
+            axis=0
+        )
+        return np.sqrt((prev_diff**2).sum()) < self.tolerance
 
     def step(self) -> None:
         """Perform one step of optimization."""
-        self.__samples = self.dist.get_samples(self.sample_num)
-        self.__fitness = self.model.evaluate_samples(self.__samples)
-        self.dist.param_variation(self.__samples, self.__fitness)
+        samples = self.dist.get_samples(self.sample_num)
+        # print("opt:", samples)
+        fitness = self.model.evaluate_samples(samples)
+        # print("opt:", fitness)
+        variation = self.dist.param_variation(samples, fitness)
+
+        self._prev_samples.appendleft(samples)
+        self._prev_fitnesses.appendleft(fitness)
+        self._prev_variation.appendleft(variation)
 
     def optimize(self) -> tuple[np.ndarray, float]:
         """Differentiate optimization from return logic."""
-        for _ in range(self._max_steps):
+        self.step()
+        for n in range(self._max_steps):
             if self.decider():
+                print(f"Optimized afer {n} steps!")
                 break
             else:
+                print(f"Step {n}: {self.dist.parameters}")
                 self.step()
         else:
             raise ConvergenceError(f"Optimizer did not converge in {self._max_steps}.")
-        opt_loc = self.dist.get_optimum()
+        opt_loc = self.dist.get_optimum().reshape((1, self.model.dof))
         opt_fit = self.model.evaluate_samples(opt_loc)[0]
         return opt_loc, opt_fit
 
@@ -97,6 +115,9 @@ class VizOptimizer(Optimizer):
     def __init__(self, model: Model, dist: Dist, sample_num: int) -> None:
         """Initialize VizOptimizer with new figure and Axes."""
         super().__init__(model, dist, sample_num)
+
+        if self.model.dof != 2:
+            raise Warning("Cannot use direction plotting for other than 2D,")
 
     @classmethod
     def using_axis(
@@ -130,7 +151,18 @@ class VizOptimizer(Optimizer):
     def plot_samples(self):
         """Plot samples."""
         axes = cast(Axes, self.ax)
-        self.model.plot_samples(axes, self.__samples)
+        self.model.plot_samples(
+            axes,
+            self._prev_samples[0],
+        )
+
+    @req_axes
+    def plot_variation(self):
+        """Plot variation direction."""
+        axes = cast(Axes, self.ax)
+        mean = self._prev_samples[0][:2].mean(axis=0)
+        dxs = self._prev_variation[0][:2]
+        axes.annotate("", xytext=mean, xy=mean + dxs, arrowprops={"arrowstyle": "->"})
 
     @req_axes
     def plot_fitness(self):
@@ -141,5 +173,6 @@ class VizOptimizer(Optimizer):
     @req_axes
     def step(self) -> None:
         """Extend the optimizer step function to plot the samples."""
+        super().step()
         self.plot_samples()
-        return super().step()
+        self.plot_variation()

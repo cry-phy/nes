@@ -3,11 +3,15 @@ import numpy.typing as npt
 from matplotlib.axes import Axes
 from abc import ABC, abstractmethod
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from nes.models import Composite
+
 
 class Model(ABC):
     """Model base class."""
 
-    @abstractmethod
     def __init__(
         self,
         lower: npt.NDArray[np.float64],
@@ -23,12 +27,13 @@ class Model(ABC):
         """The degrees_of_freedom property."""
         pass
 
+    @abstractmethod
     def evaluate_samples(
         self,
         samples: npt.NDArray[np.float64],
     ) -> npt.NDArray[np.float64]:
         """Evaluate list of samples and return fitness in order."""
-        raise NotImplementedError
+        pass
 
     @property
     def lower(self):
@@ -67,3 +72,7 @@ class Model(ABC):
         Only needed if plotting is desired.
         """
         raise NotImplementedError
+
+    def __add__(self, other: "Model") -> Composite:
+        """Generate a composite model from two models."""
+        Composite([self, other])

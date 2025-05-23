@@ -10,9 +10,11 @@ class Dist(ABC):
     @abstractmethod
     def __init__(self, num_dimensions: int) -> None:
         """Generate Instance of Class."""
+        if num_dimensions < 1:
+            raise ValueError("Must be more than 0 dimensions.")
         self._num_dimensions = num_dimensions
         self._params = np.empty(0)
-        self._learning_rate = 1
+        self._learning_rate = 0.5
 
     @classmethod
     @abstractmethod
@@ -34,7 +36,7 @@ class Dist(ABC):
     @property
     def parameters(self):
         """The parameters property."""
-        return self._params
+        return self._params.copy()
 
     @parameters.setter
     def parameters(self, value):
@@ -57,11 +59,11 @@ class Dist(ABC):
     @abstractmethod
     def param_variation(
         self, samples: npt.NDArray[np.float64], fitnesses: npt.NDArray[np.float64]
-    ) -> None:
+    ) -> npt.NDArray[np.float64]:
         """Get variation of parameters."""
-        self._params += self._inverse_fisher(samples) @ self._gradient(
-            samples, fitnesses
-        )
+        variation = self._inverse_fisher(samples) @ self._gradient(samples, fitnesses)
+        self._params += variation
+        return variation
 
     @abstractmethod
     def set_init_params(self, *args, **kwargs) -> npt.NDArray[np.float64]:

@@ -10,6 +10,9 @@ class DiagNormal(Dist):
     Limited to diagonal covariance for now as there exists a closed form of cdf.
     """
 
+    var_eps = 1e-8
+    alpha = 0.2
+
     def __init__(self, num_dimensions: int) -> None:
         """Initialize instance of Normal distribution.
 
@@ -21,18 +24,20 @@ class DiagNormal(Dist):
     @property
     def _mean(self) -> npt.NDArray[np.float64]:
         """The mean value."""
-        return self._params[: self._num_dimensions]
+        return self._params[: self._num_dimensions].copy()
 
     @property
     def _variance(self) -> npt.NDArray[np.float64]:
         """The dimensional sigmas."""
-        return self._params[self._num_dimensions :]
+        return self._params[self._num_dimensions :].copy()
+
+    def safe_variance(self) -> npt.NDArray[np.float64]:
+        """Limit variance to positive values."""
+        return np.maximum(self._variance, self.var_eps)
 
     @classmethod
     def from_dimensions(cls, num_dimensions: int) -> "DiagNormal":
         """Generate Normal distribution with number of dimensions."""
-        if num_dimensions < 1:
-            raise ValueError("Must be more than 0 dimensions.")
         return cls(num_dimensions)
 
     @classmethod
@@ -40,9 +45,9 @@ class DiagNormal(Dist):
         """Generate a model from a Model directly."""
         lower, upper = model.search_range()
         instance = cls(len(lower))
-        means = upper - lower / 2
-        variances = np.sqrt(upper - lower)
-        params = np.concatenate(means, variances)
+        means = (upper + lower) / 2
+        variances = ((upper - lower) / 2 / 3) ** 2
+        params = np.concatenate((means.reshape(-1), variances.reshape(-1)))
         instance.set_init_params(params)
         return instance
 
@@ -55,19 +60,19 @@ class DiagNormal(Dist):
         """Compute gradient from samples."""
         gradients = np.zeros(shape=(len(samples), self.num_params))
         diffs = samples - self._mean
-        gradients[:, : self._num_dimensions] = diffs / self._variance
+        gradients[:, : self._num_dimensions] = diffs / self.safe_variance()
         gradients[:, self._num_dimensions :] = (
-            0.5 * (diffs**2 / self._variance - 1) / self._variance
+            0.5 * (diffs**2 / self.safe_variance() - 1) / self.safe_variance()
         )
-        weighted_gradients = gradients.T * fitnesses / fitnesses.sum()
-        return weighted_gradients.T.sum(axis=0)
+        adjusted_fitness = fitnesses - fitnesses.min()
+        weighted_gradients = gradients * (adjusted_fitness / adjusted_fitness.sum())
+        return weighted_gradients.sum(axis=0)
 
     def _inverse_fisher(self, samples: npt.NDArray) -> npt.NDArray:
         """Compute Fisher matrix.
 
         Since there exists a closed form we simply use it here.
         """
-        # save fisher as class variable so its not reallocated each time.
         invfisher = self._params.copy()
         invfisher[: self._num_dimensions] = invfisher[: self._num_dimensions]
         invfisher[self._num_dimensions :] = 2 * invfisher[self._num_dimensions :] ** 2
@@ -75,13 +80,22 @@ class DiagNormal(Dist):
 
     def param_variation(
         self, samples: npt.NDArray[np.float64], fitnesses: npt.NDArray[np.float64]
-    ) -> None:
+    ) -> npt.NDArray[np.float64]:
         """Get variation of parameters."""
-        self._params += (
-            self.learning_rate
-            * self._inverse_fisher(samples)
-            * self._gradient(samples, fitnesses)
+        variation = -(
+            self._inverse_fisher(samples) * self._gradient(samples, fitnesses)
         )
+        norm = np.linalg.norm(variation)
+        eta = self.learning_rate / np.sqrt(1 + (self.alpha * norm) ** 2)
+        print(eta)
+        self._params += eta * variation
+        # need to clamp variance positive
+        self._params[self._num_dimensions :] = np.maximum(
+            self._params[self._num_dimensions :], self.var_eps
+        )
+        print(self.parameters)
+        print(variation)
+        return variation
 
     def get_optimum(self) -> npt.NDArray[np.float64]:
         """Get optimum parameters."""

@@ -1,4 +1,4 @@
-from models import NPolynome
+from nes.models import NPolynome
 import numpy as np
 from numpy.testing import assert_allclose
 
@@ -17,9 +17,11 @@ def test_1d_linear():
     """Ensure 1 dimensional linear polynome works as expected."""
     gradient = 3
     y_offset = -1
+    dims = 1
+    num_samples = 100
     params = np.array([[y_offset], [gradient]])
     model = NPolynome(params)
-    samples = np.arange(-10, 10).reshape(-1, 1)
+    samples = np.random.random((num_samples, dims))
     values = model.evaluate_samples(samples)
     check_values = gradient * samples + y_offset
     assert_allclose(check_values, values)
