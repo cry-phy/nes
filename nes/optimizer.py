@@ -18,7 +18,9 @@ class ConvergenceError(BaseException):
 class Optimizer:
     """Optimizer class orchestrating the Model and Distribution."""
 
-    def __init__(self, model: Model, dist: Dist, sample_num: int) -> None:
+    def __init__(
+        self, model: Model, dist: Dist, sample_num: int, maxlen: int = 10
+    ) -> None:
         """Initialize Optimizer.
 
         Set with preset Model and distribution.
@@ -32,9 +34,11 @@ class Optimizer:
         self._tolerance: float = 1e-3
         self.decider: Callable[[], bool] = self.gradient_decider
 
-        self._prev_samples: deque[npt.NDArray[np.float64]] = deque(maxlen=10)
-        self._prev_fitnesses: deque[npt.NDArray[np.float64]] = deque(maxlen=10)
-        self._prev_variation: deque[npt.NDArray[np.float64]] = deque(maxlen=10)
+        self._hlen: int = maxlen
+        self._prev_samples: deque[npt.NDArray[np.float64]] = deque(maxlen=self._hlen)
+        self._prev_fitnesses: deque[npt.NDArray[np.float64]] = deque(maxlen=self._hlen)
+        self._prev_variation: deque[npt.NDArray[np.float64]] = deque(maxlen=self._hlen)
+        self._prev_parameter: deque[npt.NDArray[np.float64]] = deque(maxlen=self._hlen)
 
     @property
     def tolerance(self) -> float:
@@ -67,6 +71,8 @@ class Optimizer:
 
     def step(self) -> None:
         """Perform one step of optimization."""
+        self._prev_parameter.appendleft(self.dist.parameters)
+
         samples = self.dist.get_samples(self.sample_num)
         fitness = self.model.evaluate_samples(samples)
         variation = self.dist.param_variation(samples, fitness)
@@ -112,7 +118,7 @@ class VizOptimizer(Optimizer):
 
     def __init__(self, model: Model, dist: Dist, sample_num: int) -> None:
         """Initialize VizOptimizer with new figure and Axes."""
-        super().__init__(model, dist, sample_num)
+        super().__init__(model, dist, sample_num, maxlen=int(1e5))
 
         if self.model.dof != 2:
             raise Warning("Cannot use direction plotting for other than 2D,")
@@ -169,8 +175,17 @@ class VizOptimizer(Optimizer):
         self.model.plot_fitness(axes, self.model.lower, self.model.upper)
 
     @req_axes
-    def step(self) -> None:
+    def step(self, show: bool = False) -> None:
         """Extend the optimizer step function to plot the samples."""
         super().step()
-        self.plot_samples()
-        self.plot_variation()
+        if show:
+            self.plot_samples()
+            self.plot_variation()
+
+    @req_axes
+    def plot_series(self) -> None:
+        """Plot parameters over time."""
+        axes = cast(Axes, self.ax)
+        data = np.flipud(np.array(self._prev_parameter))
+        for param in data.T:
+            axes.plot(param)

@@ -65,7 +65,9 @@ class DiagNormal(Dist):
             0.5 * (diffs**2 / self.safe_variance() - 1) / self.safe_variance()
         )
         adjusted_fitness = fitnesses - fitnesses.min()
-        weighted_gradients = gradients * (adjusted_fitness / adjusted_fitness.sum())
+        weighted_gradients = (gradients * fitnesses) * (
+            adjusted_fitness / adjusted_fitness.sum()
+        )
         return weighted_gradients.sum(axis=0)
 
     def _inverse_fisher(self, samples: npt.NDArray) -> npt.NDArray:
@@ -74,7 +76,7 @@ class DiagNormal(Dist):
         Since there exists a closed form we simply use it here.
         """
         invfisher = self._params.copy()
-        invfisher[: self._num_dimensions] = invfisher[: self._num_dimensions]
+        invfisher[: self._num_dimensions] = invfisher[self._num_dimensions :]
         invfisher[self._num_dimensions :] = 2 * invfisher[self._num_dimensions :] ** 2
         return invfisher
 
@@ -101,3 +103,14 @@ class DiagNormal(Dist):
     def set_init_params(self, parameters: npt.NDArray[np.float64]) -> None:
         """Get initial parameters."""
         self._params = parameters
+
+    def plot_sigma(self, ax, num=3) -> None:
+        """Draw ellipsis of sigma bound."""
+        if self._num_dimensions != 2:
+            raise ValueError("Cannot plot bounds in other than 2 dimensions.")
+        t = np.linspace(0, 2 * np.pi, 100)
+        for i in range(num):
+            ax.plot(
+                self._mean[0] + (i + 1) * self._variance[0] ** 0.5 * np.cos(t),
+                self._mean[1] + (i + 1) * self._variance[1] ** 0.5 * np.sin(t),
+            )
