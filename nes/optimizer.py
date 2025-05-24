@@ -185,6 +185,10 @@ class VizOptimizer(Optimizer):
     def plot_series(self) -> None:
         """Plot parameters over time."""
         axes = cast(Axes, self.ax)
+        axes_right = plt.twinx(axes)
         data = np.flipud(np.array(self._prev_parameter))
-        for param in data.T:
-            axes.plot(param)
+        axes.plot(data[:, 0], label="x")
+        axes.plot(data[:, 1], label="y")
+        axes_right.plot(data[:, 2], label="var x")
+        axes_right.plot(data[:, 3], label="var y")
+        axes.legend()

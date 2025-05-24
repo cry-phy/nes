@@ -71,7 +71,7 @@ class XDiagNormal(Dist):
     ) -> npt.NDArray[np.float64]:
         """Analytically compute Fisher matrix."""
         invfisher = self._params.copy()
-        invfisher[: self._num_dimensions] = invfisher[: self._num_dimensions]
+        invfisher[: self._num_dimensions] = self._variance
         invfisher[self._num_dimensions :] = 1
         return invfisher
 
@@ -79,19 +79,14 @@ class XDiagNormal(Dist):
         self, samples: npt.NDArray[np.float64], fitnesses: npt.NDArray[np.float64]
     ) -> npt.NDArray[np.float64]:
         """Compute standard Parameter variation."""
-        variation = self._inverse_fisher(samples) * self._gradient(samples, fitnesses)
+        variation = -self._inverse_fisher(samples) * self._gradient(samples, fitnesses)
         eta = np.concatenate(
             [
                 grad_dep_rate(variation[: self._num_dimensions]),
                 grad_dep_rate(variation[self._num_dimensions :]),
             ]
         )
-        print(eta)
         self._params += eta * variation
-        # need to clamp variance positive
-        self._params[self._num_dimensions :] = np.maximum(
-            self._params[self._num_dimensions :], self.var_eps
-        )
         return variation
 
     def get_optimum(self) -> npt.NDArray[np.float64]:
@@ -102,7 +97,8 @@ class XDiagNormal(Dist):
         """Get initial parameters."""
         if np.any(parameters[self._num_dimensions :] <= 0):
             raise ValueError("Cannot use negative variances.")
-        self._params[: self._num_dimensions] = parameters[self._num_dimensions :]
+        self._params[: self._num_dimensions] = parameters[: self._num_dimensions]
         self._params[self._num_dimensions :] = np.log(
             parameters[self._num_dimensions :]
         )
+        print(self._params)
