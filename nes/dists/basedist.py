@@ -9,7 +9,10 @@ class Dist(ABC):
 
     @abstractmethod
     def __init__(self, num_dimensions: int) -> None:
-        """Generate Instance of Class."""
+        """Generate Instance of Class.
+
+        !!! Use factory methods instead !!!
+        """
         if num_dimensions < 1:
             raise ValueError("Must be more than 0 dimensions.")
         self._num_dimensions: int = int(num_dimensions)

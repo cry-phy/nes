@@ -1,5 +1,7 @@
 # NES
 
+Usage: Look at [res/example.ipynb](Examples)!
+
 This project uses poetry for managing dependencies for Python 3.10. To use use the environment run
 ```bash
 poetry install --no-root
