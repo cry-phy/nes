@@ -65,9 +65,7 @@ class DiagNormal(Dist):
             0.5 * (diffs**2 / self.safe_variance() - 1) / self.safe_variance()
         )
         adjusted_fitness = fitnesses - fitnesses.min()
-        weighted_gradients = (gradients * fitnesses) * (
-            adjusted_fitness / adjusted_fitness.sum()
-        )
+        weighted_gradients = gradients * (adjusted_fitness / adjusted_fitness.sum())
         return weighted_gradients.sum(axis=0)
 
     def _inverse_fisher(self, samples: npt.NDArray) -> npt.NDArray:
