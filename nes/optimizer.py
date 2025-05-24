@@ -29,7 +29,7 @@ class Optimizer:
         self.dist: Dist = dist
 
         self.sample_num = sample_num
-        self._max_steps: int = int(5e3)
+        self._max_steps: int = int(1e4)
 
         self._tolerance: float = 1e-3
         self.decider: Callable[[], bool] = self.gradient_decider
@@ -60,7 +60,9 @@ class Optimizer:
 
     def gradient_decider(self) -> bool:
         """Decide continuation based on tolerance in gradient."""
-        return np.sqrt((self._prev_variation[0] ** 2).sum()) < self.tolerance
+        grads = np.array(self._prev_variation)
+        norms = np.linalg.norm(grads, axis=1)
+        return norms.mean() <= self.tolerance
 
     def diff_decider(self) -> bool:
         """Decide continuation based on tolerance in gradient."""
@@ -89,7 +91,7 @@ class Optimizer:
                 print(f"Optimized afer {n} steps!")
                 break
             else:
-                print(f"Step {n}: {self.dist.parameters}")
+                #  print(f"Step {n}: {self.dist.parameters}")
                 self.step()
         else:
             raise ConvergenceError(f"Optimizer did not converge in {self._max_steps}.")
@@ -152,12 +154,12 @@ class VizOptimizer(Optimizer):
         self._fig = value
 
     @req_axes
-    def plot_samples(self):
+    def plot_samples(self, max_samples: int = 32):
         """Plot samples."""
         axes = cast(Axes, self.ax)
         self.model.plot_samples(
             axes,
-            self._prev_samples[0],
+            self._prev_samples[0][:max_samples],
         )
 
     @req_axes
@@ -189,6 +191,6 @@ class VizOptimizer(Optimizer):
         data = np.flipud(np.array(self._prev_parameter))
         axes.plot(data[:, 0], label="x")
         axes.plot(data[:, 1], label="y")
-        axes_right.plot(data[:, 2], label="var x")
-        axes_right.plot(data[:, 3], label="var y")
+        axes_right.plot(data[:, 2], label="var x", alpha=0.3)
+        axes_right.plot(data[:, 3], label="var y", alpha=0.3)
         axes.legend()

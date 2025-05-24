@@ -12,7 +12,7 @@ class Dist(ABC):
         """Generate Instance of Class."""
         if num_dimensions < 1:
             raise ValueError("Must be more than 0 dimensions.")
-        self._num_dimensions = num_dimensions
+        self._num_dimensions: int = int(num_dimensions)
         self._params = np.empty(0)
         self._learning_rate = 0.5
 

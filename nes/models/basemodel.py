@@ -82,7 +82,7 @@ class Composite(Model):
     ) -> None:
         """Instanciate variables at instance level."""
         super().__init__(lower, upper)
-        self._dof = 0
+        self._dof: int = 0
         self._models = []
 
     @classmethod
@@ -94,14 +94,15 @@ class Composite(Model):
         for model in iterable:
             if model.dof != dof:
                 raise ValueError("All models need to have the same degrees of freedom!")
-            upper = np.maximum(upper, model.upper)
-            lower = np.minimum(lower, model.lower)
+            upper = np.minimum(upper, model.upper)
+            lower = np.maximum(lower, model.lower)
         instance = cls(lower, upper)
-        instance._dof = dof
+        instance._dof = int(dof)
         instance._models = list(iterable)
         return instance
 
-    def dof(self):
+    @property
+    def dof(self) -> int:
         """Return degrees of freedom."""
         return self._dof
 

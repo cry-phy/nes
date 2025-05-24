@@ -46,7 +46,7 @@ class DiagNormal(Dist):
         lower, upper = model.search_range()
         instance = cls(len(lower))
         means = (upper + lower) / 2
-        variances = ((upper - lower) / 2 / 3) ** 2
+        variances = ((upper - lower) / 6) ** 2 / 10
         params = np.concatenate((means.reshape(-1), variances.reshape(-1)))
         instance.set_init_params(params)
         return instance
