@@ -180,7 +180,6 @@ class VizOptimizer(Optimizer):
         super().step()
         if show:
             self.plot_samples()
-            self.plot_variation()
 
     @req_axes
     def plot_series(self) -> None:

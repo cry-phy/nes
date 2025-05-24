@@ -62,7 +62,7 @@ class Dist(ABC):
     ) -> npt.NDArray[np.float64]:
         """Get variation of parameters."""
         variation = self._inverse_fisher(samples) @ self._gradient(samples, fitnesses)
-        self._params += variation
+        self._params += -self._learning_rate * variation
         return variation
 
     @abstractmethod
