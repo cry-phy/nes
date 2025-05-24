@@ -36,7 +36,7 @@ class XDiagNormal(Dist):
         lower, upper = model.search_range()
         instance = cls(len(lower))
         means = (upper + lower) / 2
-        variances = 2 * np.log(upper - lower) + np.log(6)
+        variances = 2 * np.log(upper - lower) + np.log(10)
         params = np.concatenate((means.reshape(-1), variances.reshape(-1)))
         instance.set_init_params(params)
         return instance
