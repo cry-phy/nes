@@ -152,12 +152,12 @@ class VizOptimizer(Optimizer):
         self._fig = value
 
     @req_axes
-    def plot_samples(self):
+    def plot_samples(self, max_samples: int = 32):
         """Plot samples."""
         axes = cast(Axes, self.ax)
         self.model.plot_samples(
             axes,
-            self._prev_samples[0],
+            self._prev_samples[0][:max_samples],
         )
 
     @req_axes

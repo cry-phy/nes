@@ -22,6 +22,8 @@ class XDiagNormal(Dist):
         """
         super().__init__(num_dimensions)
         self._params: npt.NDArray[np.float64] = np.zeros(2 * num_dimensions)
+        self._var_ma: float = 1e6
+        self._fac_ma: float = 0.3
 
     @classmethod
     def from_dimensions(cls, num_dimensions: int) -> "Dist":
@@ -80,14 +82,32 @@ class XDiagNormal(Dist):
     ) -> npt.NDArray[np.float64]:
         """Compute standard Parameter variation."""
         variation = -self._inverse_fisher(samples) * self._gradient(samples, fitnesses)
+        self._params += self._adaptive_rate(variation) * variation
+        diff_ma = np.linalg.norm(variation[self._num_dimensions :]) - self._var_ma
+        self._var_ma = float((1 - self._fac_ma) * self._var_ma + self._fac_ma * diff_ma)
+        return variation
+
+    def _adaptive_rate(self, variation) -> npt.NDArray:
         eta = np.concatenate(
             [
                 grad_dep_rate(variation[: self._num_dimensions]),
-                grad_dep_rate(variation[self._num_dimensions :]),
+                grad_dep_rate(variation[self._num_dimensions :])
+                * self._stagnation_factor(),
             ]
         )
-        self._params += eta * variation
-        return variation
+        return eta
+
+    def _stagnation_factor(
+        self,
+        lower: float = 0,
+        upper: float = 20,
+        steep: float = 1,
+        thresh: float = 1e-2,
+    ) -> float | npt.NDArray:
+        """Adjust variance according to stagnation of parameters."""
+        return lower + (upper - lower) * 1 / (
+            1 + np.exp(steep * (self._var_ma - thresh))
+        )
 
     def get_optimum(self) -> npt.NDArray[np.float64]:
         """Get optimum mean parameters."""
@@ -101,4 +121,3 @@ class XDiagNormal(Dist):
         self._params[self._num_dimensions :] = np.log(
             parameters[self._num_dimensions :]
         )
-        print(self._params)
