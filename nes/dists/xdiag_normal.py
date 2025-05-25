@@ -18,7 +18,7 @@ class XDiagNormal(Dist):
     def __init__(self, num_dimensions: int) -> None:
         """Initialize instance of Normal distribution.
 
-        Use factory methods instead!
+        !!! Use factory methods instead !!!
         """
         super().__init__(num_dimensions)
         self._params: npt.NDArray[np.float64] = np.zeros(2 * num_dimensions)
@@ -83,11 +83,20 @@ class XDiagNormal(Dist):
         """Compute standard Parameter variation."""
         variation = -self._inverse_fisher(samples) * self._gradient(samples, fitnesses)
         self._params += self._adaptive_rate(variation) * variation
+        self._limit_variance()
         diff_ma = np.linalg.norm(variation[self._num_dimensions :]) - self._var_ma
         self._var_ma = float((1 - self._fac_ma) * self._var_ma + self._fac_ma * diff_ma)
         return variation
 
+    def _limit_variance(self, threshold: float = 1e-1) -> None:
+        """Limit differences in variances."""
+        log_threshold = np.log(threshold)
+        highest = max(self._params[self._num_dimensions :])
+        too_low_mask = (self._params[self._num_dimensions :] - highest) <= log_threshold
+        self._params[self._num_dimensions :][too_low_mask] = highest + log_threshold
+
     def _adaptive_rate(self, variation) -> npt.NDArray:
+        """Generate adaptive rate vector."""
         eta = np.concatenate(
             [
                 grad_dep_rate(variation[: self._num_dimensions]),

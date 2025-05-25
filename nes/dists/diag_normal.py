@@ -16,7 +16,7 @@ class DiagNormal(Dist):
     def __init__(self, num_dimensions: int) -> None:
         """Initialize instance of Normal distribution.
 
-        Use factory methods instead!
+        !!! Use factory methods instead !!!
         """
         super().__init__(num_dimensions)
         self._params: npt.NDArray[np.float64] = np.zeros(2 * num_dimensions)
