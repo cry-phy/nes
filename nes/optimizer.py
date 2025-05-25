@@ -163,10 +163,18 @@ class VizOptimizer(Optimizer):
         )
 
     @req_axes
+    def plot_mean_plane(self) -> None:
+        """Plot previous means parameters into mean."""
+        # !!! temporary only (uses manualy layout)!!!
+        axes = cast(Axes, self.ax)
+        values = np.array(self._prev_parameter)[:, :2]
+        axes.plot(*values.T)
+
+    @req_axes
     def plot_variation(self):
         """Plot variation direction."""
         axes = cast(Axes, self.ax)
-        mean = self._prev_samples[0][:2].mean(axis=0)
+        mean = self._prev_parameter[0][:2]
         dxs = self._prev_variation[0][:2]
         axes.annotate("", xytext=mean, xy=mean + dxs, arrowprops={"arrowstyle": "->"})
 
