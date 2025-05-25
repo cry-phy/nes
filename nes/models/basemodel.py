@@ -53,25 +53,41 @@ class Model(ABC):
         """Make initial range for sample."""
         return np.array((self._lower, self._upper))
 
-    def plot_fitness(
-        self, ax: Axes, lower: npt.NDArray[np.float64], upper: npt.NDArray[np.float64]
-    ) -> None:
-        """Display the fitness.
-
-        Only needed if plotting is desired.
-        """
-        raise NotImplementedError
-
-    def plot_samples(self, ax: Axes, samples: npt.NDArray[np.float64]) -> None:
-        """Display the samples.
-
-        Only needed if plotting is desired.
-        """
-        raise NotImplementedError
-
     def __add__(self, other: "Model") -> "Composite":
         """Generate a composite model from two models."""
         return Composite.add_iter([self, other])
+
+    def plot_fitness(
+        self,
+        ax: Axes,
+        lower: npt.NDArray[np.float64],
+        upper: npt.NDArray[np.float64],
+        i1: int = 0,
+        i2: int = 1,
+    ) -> None:
+        """Display the fitness against the first two dimensions."""
+        n: int = 101
+        line1 = np.linspace(lower[i1], upper[i1], n)
+        line2 = np.linspace(lower[i2], upper[i2], n)
+        x, y = np.meshgrid(line1, line2)
+        samples_xy = np.array([x, y]).reshape(2, -1).T
+        samples = np.zeros((n**2, self.dof))
+        samples[:, i1] = samples_xy[:, 0]
+        samples[:, i2] = samples_xy[:, 1]
+        fitness = self.evaluate_samples(samples).reshape(x.shape)
+        ax.contourf(x, y, fitness, levels=50, cmap="plasma")
+
+    def plot_samples(
+        self,
+        ax: Axes,
+        samples: npt.NDArray[np.float64],
+        i1: int = 0,
+        i2: int = 1,
+    ) -> None:
+        """Display the first two dimensions of samples."""
+        xs: npt.NDArray = samples[:, i1]
+        ys: npt.NDArray = samples[:, i2]
+        ax.scatter(xs, ys, s=40, facecolors="none", edgecolors="b")
 
 
 class Composite(Model):
