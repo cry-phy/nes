@@ -50,27 +50,6 @@ class NPolynome(Model):
         exponentiated = samples[:, :, np.newaxis] ** orders[np.newaxis, np.newaxis, :]
         return (weights_expanded * exponentiated).sum(axis=(1, 2)).reshape(-1, 1)
 
-    def plot_fitness(
-        self,
-        ax: Axes,
-        lower: npt.NDArray[np.float64],
-        upper: npt.NDArray[np.float64],
-    ) -> None:
-        """Display the fitness against the first two dimensions."""
-        n: int = 101
-        xs: npt.NDArray = np.linspace(lower[0], upper[0], n)
-        ys: npt.NDArray = np.linspace(lower[1], upper[1], n)
-        x, y = np.meshgrid(xs, ys)
-        samples = np.array([x, y]).reshape(2, -1).T
-        fitness = self.evaluate_samples(samples).reshape(x.shape)
-        ax.contourf(x, y, fitness, levels=50, cmap="plasma")
-
-    def plot_samples(self, ax: Axes, samples: npt.NDArray[np.float64]) -> None:
-        """Display the first two dimensions of samples."""
-        phis: npt.NDArray = samples[:, 0]
-        thetas: npt.NDArray = samples[:, 1]
-        ax.scatter(phis, thetas, s=40, facecolors="none", edgecolors="b")
-
 
 class Spherical(Model):
     """Real Part Spherical Harmonic.
@@ -134,21 +113,6 @@ class Spherical(Model):
             * self.__ass_legendre(np.cos(samples[:, 1]).reshape(-1, 1))
             * np.cos(2 * self.m * samples[:, 0].reshape(-1, 1))
         )
-
-    def plot_fitness(
-        self,
-        ax: Axes,
-        lower: npt.NDArray[np.float64],
-        upper: npt.NDArray[np.float64],
-    ) -> None:
-        """Display the fitness."""
-        n: int = 101
-        phis: npt.NDArray = np.linspace(lower[0], upper[0], n)
-        thetas: npt.NDArray = np.linspace(lower[1], upper[1], n)
-        x, y = np.meshgrid(phis, thetas)
-        samples = np.array([x, y]).reshape(2, -1).T
-        fitness = self.evaluate_samples(samples).reshape(x.shape)
-        ax.contourf(x, y, fitness, levels=50, cmap="plasma")
 
     def plot_samples(self, ax: Axes, samples: npt.NDArray[np.float64]) -> None:
         """Display the samples."""
