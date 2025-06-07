@@ -20,11 +20,9 @@ class Normal(Dist):
         !!! Use factory methods instead !!!
         """
         super().__init__(num_dimensions)
-        # self._param_variance: npt.NDArray[np.float64] = np.eye(num_dimensions)
         # A_var is the chowsky decomposition of covariance matriy A^T @ A = Covariance
         # Save only A maybe
         self._param_A_var: npt.NDArray[np.float64] = np.eye(num_dimensions)
-        self._param_invA_var: npt.NDArray[np.float64] = np.eye(num_dimensions)
         self._param_mean: npt.NDArray[np.float64] = np.zeros(num_dimensions)
 
 
@@ -68,11 +66,12 @@ class Normal(Dist):
     def _gradient(self, samples: npt.NDArray, fitnesses: npt.NDArray) -> tuple[npt.NDArray, npt.NDArray, npt.NDArray]:
         """Compute gradient from samples."""
         gradient_mean = np.zeros(shape=(self._num_dimensions))
-        gradient_variance = np.zeros(shape=(self._num_dimensions, self._num_dimensions))
         gradient_A_var = np.zeros(shape=(self._num_dimensions, self._num_dimensions))
         fischer = np.zeros(shape=(self._num_dimensions, self._num_dimensions))
-        self._param_invA_var = solve_triangular(self._param_A_var, np.eye(self._num_dimensions))
-        invVariance = self._param_invA_var @ self._param_invA_var.T
+        inverse_A_var = solve_triangular(self._param_A_var, np.eye(self._num_dimensions))
+        invVariance = inverse_A_var @ inverse_A_var.T
+        adjusted_fitness = fitnesses - fitnesses.min()
+        adjusted_fitness /= adjusted_fitness.sum()
         for idx, sample in enumerate(samples):
             log_grad_mean = invVariance @ (sample - self._mean)
             log_grad_variance = (-0.5 * invVariance
@@ -80,27 +79,31 @@ class Normal(Dist):
                                                    (sample-self._mean).T @ invVariance
                                                 )
                                 )
-            gradient_mean += fitnesses[idx] * log_grad_mean
-            gradient_A_var += fitnesses[idx] * self._param_A_var @ (log_grad_variance + log_grad_variance.T)
+            gradient_mean += adjusted_fitness[idx] * log_grad_mean
+            gradient_A_var += adjusted_fitness[idx] * self._param_A_var @ (log_grad_variance + log_grad_variance.T)
             fischer += np.outer(log_grad_mean, log_grad_mean) + log_grad_variance@log_grad_variance.T
 
         gradient_mean /= len(samples)
-        gradient_variance /= len(samples)
+        gradient_A_var /= len(samples)
         fischer /= len(samples)
-        return gradient_mean, gradient_variance, fischer
+        return gradient_mean, gradient_A_var, fischer
 
 
     def param_variation(
         self, samples: npt.NDArray[np.float64], fitnesses: npt.NDArray[np.float64]
-    ) -> tuple[npt.NDArray, npt.NDArray]:
+    ) -> npt.NDArray:
         """Get variation of parameters."""
-        grad_mean, grad_var, fischer = self._gradient(samples, fitnesses)
+        grad_mean, grad_A, fischer = self._gradient(samples, fitnesses)
         cho_fischer, lower = cho_factor(fischer)
+        # Solving equation F@variation = beta grad_parameters for variation to avoid
+        # Having to invert the Fisher matrix fully
         variation_mean = cho_solve((cho_fischer, lower), grad_mean)
-        variation_var = cho_solve((cho_fischer, lower), grad_var)
+        variation_A = cho_solve((cho_fischer, lower), grad_A)
         self._param_mean += self._learning_rate * variation_mean
-        self._param_variance += self._learning_rate * variation_var
-        return variation_mean, variation_var
+        self._param_A_var += self._learning_rate * variation_A
+        #Handeling variances to return in a list so optimizer can handle return value
+        variation = np.concatenate((variation_mean, np.diag(variation_A)))
+        return variation
 
     def get_optimum(self) -> npt.NDArray[np.float64]:
         """Get optimum parameters."""
