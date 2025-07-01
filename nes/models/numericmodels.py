@@ -62,7 +62,7 @@ class Spherical(Model):
         if l_order < m_order:
             raise ValueError("Order l must be larger than order m")
         lower = np.array([0, 0])
-        upper = np.array([2 * np.pi, np.pi])
+        upper = np.array([2 * np.pi, np.pi * 2])
         super().__init__(lower, upper)
         self.l: int = l_order
         self.m: int = m_order

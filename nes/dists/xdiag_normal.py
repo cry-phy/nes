@@ -74,7 +74,7 @@ class XDiagNormal(Dist):
         """Analytically compute Fisher matrix."""
         invfisher = self._params.copy()
         invfisher[: self._num_dimensions] = self._variance
-        invfisher[self._num_dimensions :] = 1
+        invfisher[self._num_dimensions :] = 1 / (2 * self._variance**2)
         return invfisher
 
     def param_variation(

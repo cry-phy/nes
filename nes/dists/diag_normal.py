@@ -19,7 +19,12 @@ class DiagNormal(Dist):
         !!! Use factory methods instead !!!
         """
         super().__init__(num_dimensions)
-        self._params: npt.NDArray[np.float64] = np.zeros(2 * num_dimensions)
+        self._params: npt.NDArray[np.float64] = np.concatenate(
+            (
+                np.zeros(num_dimensions, dtype=np.float64),
+                np.ones(num_dimensions, dtype=np.float64) * 5,
+            )
+        )
 
     @property
     def _mean(self) -> npt.NDArray[np.float64]:
@@ -77,6 +82,13 @@ class DiagNormal(Dist):
         invfisher[: self._num_dimensions] = invfisher[self._num_dimensions :]
         invfisher[self._num_dimensions :] = 2 * invfisher[self._num_dimensions :] ** 2
         return invfisher
+
+    def _analytical_fisher(self) -> npt.NDArray[np.float64]:
+        """Compute analytical Fisher matrix."""
+        fisher = np.zeros(self.num_params, dtype=np.float64)
+        fisher[: self._num_dimensions] = 1 / self.safe_variance()
+        fisher[self._num_dimensions :] = 1 / (2 * self.safe_variance() ** 2)
+        return fisher
 
     def param_variation(
         self, samples: npt.NDArray[np.float64], fitnesses: npt.NDArray[np.float64]
