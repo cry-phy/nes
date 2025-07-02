@@ -2,7 +2,7 @@ import numpy as np
 import numpy.typing as npt
 from matplotlib.axes import Axes
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 
 
 class Model(ABC):
@@ -193,6 +193,9 @@ class Model(ABC):
         upper: npt.NDArray[np.float64],
         i1: int = 0,
         i2: int = 1,
+        scale_fn: Callable[
+            [npt.NDArray[np.float64]], npt.NDArray[np.float64]
+        ] = lambda x: x,
     ) -> None:
         """Display the fitness against the first two dimensions."""
         n: int = 101
@@ -204,7 +207,8 @@ class Model(ABC):
         samples[:, i1] = samples_xy[:, 0]
         samples[:, i2] = samples_xy[:, 1]
         fitness = self.evaluate_samples(samples).reshape(x.shape)
-        ax.contourf(x, y, fitness, levels=50, cmap="plasma")
+        fitness_scaled = scale_fn(fitness)
+        ax.contourf(x, y, fitness_scaled, levels=50, cmap="plasma")
 
     def plot_samples(
         self,
