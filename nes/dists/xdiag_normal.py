@@ -92,6 +92,14 @@ class XDiagNormal(Dist):
             parameters[self._num_dimensions :]
         )
 
+    def get_covariance(self) -> npt.NDArray[np.float64]:
+        """Get a covarinance matrix."""
+        return np.diag(self._variance.copy())
+
+    def get_mean(self) -> npt.NDArray[np.float64]:
+        """Get a covarinance matrix."""
+        return self._mean.copy()
+
 
 class XDiagNormalSchaulLR(XDiagNormal):
     """Use Constant learning rates heuristically found by Schaul et al."""

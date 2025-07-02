@@ -8,7 +8,7 @@ from .laplace import Laplace
 from .diag_normal import DiagNormal, DiagNormalSchaulLR, DiagNormalAdaptive
 from .xdiag_normal import XDiagNormal, XDiagNormalSchaulLR, XDiagNormalAdaptive
 from .student_t import StudentTDist, StudentTDistSchaulLR, StudentTDistAdaptive
-from .xnormal import XNormal, XNormalSchaulRL, XNormalAdaptive
+from .xnormal import XNormal, XNormalSchaulLR, XNormalAdaptive
 from .normal import Normal
 
 __all__ = [

@@ -95,8 +95,16 @@ class XNormal(Dist):
         """Get optimum parameters."""
         return self._mean.copy()
 
+    def get_covariance(self) -> npt.NDArray[np.float64]:
+        """Get a covarinance matrix."""
+        return self._param_A_var.T @ self._param_A_var
 
-class XNormalSchaulRL(XNormal):
+    def get_mean(self) -> npt.NDArray[np.float64]:
+        """Get a covarinance matrix."""
+        return self._mean.copy()
+
+
+class XNormalSchaulLR(XNormal):
     """Use Constant learning rates heuristically found by Schaul et al."""
 
     def __init__(self, num_dimensions: int) -> None:

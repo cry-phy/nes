@@ -125,6 +125,14 @@ class StudentTDist(Dist):
         self._params += -variation
         return variation
 
+    def get_covariance(self) -> npt.NDArray[np.float64]:
+        """Get a covarinance matrix."""
+        return np.diag(self._stddev**2)
+
+    def get_mean(self) -> npt.NDArray[np.float64]:
+        """Get a covarinance matrix."""
+        return self._mean.copy()
+
 
 class StudentTDistSchaulLR(StudentTDist):
     """Use Constant learning rates heuristically found by Schaul et al."""

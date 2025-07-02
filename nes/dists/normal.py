@@ -125,6 +125,14 @@ class Normal(Dist):
         """Draw ellipsis of sigma bound."""
         pass
 
+    def get_covariance(self) -> npt.NDArray[np.float64]:
+        """Get a covarinance matrix."""
+        return self._param_A_var.T @ self._param_A_var
+
+    def get_mean(self) -> npt.NDArray[np.float64]:
+        """Get a covarinance matrix."""
+        return self._mean.copy()
+
 
 class NormalSchaulLR(Normal):
     """Use Constant learning rates heuristically found by Schaul et al."""
@@ -153,3 +161,11 @@ class NormalSchaulLR(Normal):
         # Handeling variances to return in a list so optimizer can handle return value
         variation = np.concatenate((variation_mean, np.diag(variation_A)))
         return variation
+
+    def get_covariance(self) -> npt.NDArray[np.float64]:
+        """Get a covarinance matrix."""
+        return self._param_A_var.T @ self._param_A_var.T
+
+    def get_mean(self) -> npt.NDArray[np.float64]:
+        """Get a covarinance matrix."""
+        return self._mean.copy()

@@ -108,16 +108,13 @@ class DiagNormal(Dist):
         """Get initial parameters."""
         self._params = parameters
 
-    def plot_sigma(self, ax, num=3) -> None:
-        """Draw ellipsis of sigma bound."""
-        if self._num_dimensions != 2:
-            raise ValueError("Cannot plot bounds in other than 2 dimensions.")
-        t = np.linspace(0, 2 * np.pi, 100)
-        for i in range(num):
-            ax.plot(
-                self._mean[0] + (i + 1) * self._variance[0] ** 0.5 * np.cos(t),
-                self._mean[1] + (i + 1) * self._variance[1] ** 0.5 * np.sin(t),
-            )
+    def get_covariance(self) -> npt.NDArray[np.float64]:
+        """Get a covarinance matrix."""
+        return np.diag(self._variance.copy())
+
+    def get_mean(self) -> npt.NDArray[np.float64]:
+        """Get a covarinance matrix."""
+        return self._mean.copy()
 
 
 class DiagNormalSchaulLR(DiagNormal):
