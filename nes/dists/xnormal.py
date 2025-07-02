@@ -57,7 +57,7 @@ class XNormal(Dist):
         """Generate gradient."""
         diffs = (samples - self._mean) @ self._param_A_inv
 
-        adjusted_fitness = fitnesses - fitnesses.min()
+        adjusted_fitness = -fitnesses + fitnesses.max()
         weights = adjusted_fitness / adjusted_fitness.sum()
         # can pull out I and sum w@I = 1 since sum w = 1
         gradient_matrix: npt.NDArray[np.float64] = np.einsum(

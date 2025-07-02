@@ -80,7 +80,7 @@ class StudentTDist(Dist):
         # --- Fitness-weighted gradients
         ranks = np.argsort(np.argsort(fitnesses.flatten()))
         inv_ranks = n - 1 - ranks
-        weights = -inv_ranks.reshape(-1, 1) / inv_ranks.sum()
+        weights = inv_ranks.reshape(-1, 1) / inv_ranks.sum()
         grad_mu = np.mean(weights * dlogp_dmu, axis=0)
         grad_logstd = np.mean(weights * dlogp_dlogstd, axis=0)
         grad_lognu = np.mean(weights * dlogp_dlognu, axis=0)

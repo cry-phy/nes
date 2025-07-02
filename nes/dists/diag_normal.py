@@ -68,7 +68,7 @@ class DiagNormal(Dist):
         gradients[:, self._num_dimensions :] = (
             0.5 * (diffs**2 / self.safe_variance() - 1) / self.safe_variance()
         )
-        adjusted_fitness = fitnesses - fitnesses.min()
+        adjusted_fitness = -fitnesses + fitnesses.max()
         weighted_gradients = gradients * (adjusted_fitness / adjusted_fitness.sum())
         return weighted_gradients.sum(axis=0)
 

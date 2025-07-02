@@ -58,7 +58,7 @@ class XDiagNormal(Dist):
         diffs = samples - self._mean
         gradients[:, : self._num_dimensions] = diffs / self._variance
         gradients[:, self._num_dimensions :] = diffs**2 / self._variance - 1
-        adjusted_fitness = fitnesses - fitnesses.min()
+        adjusted_fitness = -fitnesses + fitnesses.max()
         weighted_gradients = gradients * (adjusted_fitness / adjusted_fitness.sum())
         return weighted_gradients.sum(axis=0)
 
