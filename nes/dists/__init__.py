@@ -7,8 +7,8 @@ from .basedist import Dist
 from .laplace import Laplace
 from .diag_normal import DiagNormal, DiagNormalSchaulLR, DiagNormalAdaptive
 from .xdiag_normal import XDiagNormal, XDiagNormalSchaulLR, XDiagNormalAdaptive
-from .student_t import StudentsT, StudentsTSchaulLR, StudentsTAdaptive
-from .xnormal import XNormal, XNormalSchaulLR, XNormalAdaptive
+from .student_t import StudentTDist, StudentTDistSchaulLR, StudentTDistAdaptive
+from .xnormal import XNormal, XNormalSchaulRL, XNormalAdaptive
 from .normal import Normal
 
 __all__ = [
@@ -18,13 +18,13 @@ __all__ = [
     "Dist",
     "Laplace",
     "Normal",
-    "StudentsT",
-    "StudentsTAdaptive",
-    "StudentsTSchaulLR",
+    "StudentTDist",
+    "StudentTDistAdaptive",
+    "StudentTDistSchaulLR",
     "XDiagNormal",
     "XDiagNormalAdaptive",
     "XDiagNormalSchaulLR",
     "XNormal",
     "XNormalAdaptive",
-    "XNormalSchaulLR",
+    "XNormalSchaulRL",
 ]
