@@ -11,13 +11,16 @@ class Rastrigin:
     def model():
         x_ = deepcopy(_x)
         y_ = deepcopy(_y)
-        return (
+        model = (
             10 * 2
             + x_**2
             - 10 * np.cos(2 * np.pi * x_)
             + y_**2
             - 10 * np.cos(2 * np.pi * y_)
         )
+        model.lower = np.array([-5.12, -5.12])
+        model.upper = np.array([5.12, 5.12])
+        return model
 
 
 class Ackley:
@@ -25,12 +28,15 @@ class Ackley:
     def model():
         x_ = deepcopy(_x)
         y_ = deepcopy(_y)
-        return (
+        model = (
             -20 * np.exp(-0.2 * (0.5 * (x_**2 + y_**2)) ** 0.5)
             - np.exp(0.5 * (np.cos(2 * np.pi * x_) + np.cos(2 * np.pi * y_)))
             + np.e
             + 20
         )
+        model.lower = np.array([-32.768, -32.768])
+        model.upper = np.array([32.768, 32.768])
+        return model
 
 
 class Sphere:
@@ -38,7 +44,10 @@ class Sphere:
     def model():
         x_ = deepcopy(_x)
         y_ = deepcopy(_y)
-        return x_**2 + y_**2
+        model = x_**2 + y_**2
+        model.lower = np.array([-5.12, -5.12])
+        model.upper = np.array([5.12, 5.12])
+        return model
 
 
 class Rosenbrock:
@@ -46,7 +55,10 @@ class Rosenbrock:
     def model():
         x_ = deepcopy(_x)
         y_ = deepcopy(_y)
-        return 100 * (y_ - x_**2) ** 2 + (1 - x_) ** 2
+        model = 100 * (y_ - x_**2) ** 2 + (1 - x_) ** 2
+        model.lower = np.array([-2.048, -2.048])
+        model.upper = np.array([2.048, 2.048])
+        return model
 
 
 class Beale:
@@ -54,11 +66,14 @@ class Beale:
     def model():
         x_ = deepcopy(_x)
         y_ = deepcopy(_y)
-        return (
+        model = (
             (1.5 - x_ + x_ * y_) ** 2
             + (2.25 - x_ + x_ * y_**2) ** 2
             + (2.625 - x_ + x_ * y_**3) ** 2
         )
+        model.lower = np.array([-4.5, -4.5])
+        model.upper = np.array([4.5, 4.5])
+        return model
 
 
 class GoldsteinPrice:
@@ -72,7 +87,10 @@ class GoldsteinPrice:
         term2 = 30 + (2 * x_ - 3 * y_) ** 2 * (
             18 - 32 * x_ + 12 * x_**2 + 48 * y_ - 36 * x_ * y_ + 27 * y_**2
         )
-        return term1 * term2
+        model = term1 * term2
+        model.lower = np.array([-2, -2])
+        model.upper = np.array([2, 2])
+        return model
 
 
 class Booth:
@@ -80,7 +98,10 @@ class Booth:
     def model():
         x_ = deepcopy(_x)
         y_ = deepcopy(_y)
-        return (x_ + 2 * y_ - 7) ** 2 + (2 * x_ + y_ - 5) ** 2
+        model = (x_ + 2 * y_ - 7) ** 2 + (2 * x_ + y_ - 5) ** 2
+        model.lower = np.array([-10, -10])
+        model.upper = np.array([10, 10])
+        return model
 
 
 class BukinN6:
@@ -88,7 +109,10 @@ class BukinN6:
     def model():
         x_ = deepcopy(_x)
         y_ = deepcopy(_y)
-        return 100 * (np.abs(y_ - 0.01 * x_**2) ** 0.5) + 0.01 * np.abs(x_ + 10)
+        model = 100 * (np.abs(y_ - 0.01 * x_**2) ** 0.5) + 0.01 * np.abs(x_ + 10)
+        model.lower = np.array([-15, -3])
+        model.upper = np.array([-5, 3])
+        return model
 
 
 class Matyas:
@@ -96,7 +120,10 @@ class Matyas:
     def model():
         x_ = deepcopy(_x)
         y_ = deepcopy(_y)
-        return 0.26 * (x_**2 + y_**2) - 0.48 * x_ * y_
+        model = 0.26 * (x_**2 + y_**2) - 0.48 * x_ * y_
+        model.lower = np.array([-10, -10])
+        model.upper = np.array([10, 10])
+        return model
 
 
 class Levi13:
@@ -104,11 +131,14 @@ class Levi13:
     def model():
         x_ = deepcopy(_x)
         y_ = deepcopy(_y)
-        return (
+        model = (
             np.sin(3 * np.pi * x_) ** 2
             + (x_ - 1) ** 2 * (1 + np.sin(3 * np.pi * y_) ** 2)
             + (y_ - 1) ** 2 * (1 + np.sin(2 * np.pi * y_) ** 2)
         )
+        model.lower = np.array([-10, -10])
+        model.upper = np.array([10, 10])
+        return model
 
 
 class Griewank:
@@ -116,11 +146,14 @@ class Griewank:
     def model():
         x_ = deepcopy(_x)
         y_ = deepcopy(_y)
-        return (
+        model = (
             1
             + (x_**2 + y_**2) / 4000
             - np.cos(x_ / np.sqrt(1)) * np.cos(y_ / np.sqrt(2))
         )
+        model.lower = np.array([-100, -100])  # Adjusted from [-600, -600]
+        model.upper = np.array([100, 100])   # Adjusted from [600, 600]
+        return model
 
 
 class Himmelblau:
@@ -128,7 +161,10 @@ class Himmelblau:
     def model():
         x_ = deepcopy(_x)
         y_ = deepcopy(_y)
-        return (x_**2 + y_ - 11) ** 2 + (x_ + y_**2 - 7) ** 2
+        model = (x_**2 + y_ - 11) ** 2 + (x_ + y_**2 - 7) ** 2
+        model.lower = np.array([-5, -5])
+        model.upper = np.array([5, 5])
+        return model
 
 
 class ThreeHumpCamel:
@@ -136,7 +172,10 @@ class ThreeHumpCamel:
     def model():
         x_ = deepcopy(_x)
         y_ = deepcopy(_y)
-        return 2 * x_**2 - 1.05 * x_**4 + (x_**6) / 6 + x_ * y_ + y_**2
+        model = 2 * x_**2 - 1.05 * x_**4 + (x_**6) / 6 + x_ * y_ + y_**2
+        model.lower = np.array([-5, -5])
+        model.upper = np.array([5, 5])
+        return model
 
 
 class Easom:
@@ -144,9 +183,12 @@ class Easom:
     def model():
         x_ = deepcopy(_x)
         y_ = deepcopy(_y)
-        return (
+        model = (
             -np.cos(x_) * np.cos(y_) * np.exp(-((x_ - np.pi) ** 2 + (y_ - np.pi) ** 2))
         )
+        model.lower = np.array([-50, -50])  # Adjusted from [-100, -100]
+        model.upper = np.array([50, 50])   # Adjusted from [100, 100]
+        return model
 
 
 class CrossInTray:
@@ -162,7 +204,10 @@ class CrossInTray:
             )
             + 1
         )
-        return -0.0001 * expr**0.1
+        model = -0.0001 * expr**0.1
+        model.lower = np.array([-10, -10])
+        model.upper = np.array([10, 10])
+        return model
 
 
 class Eggholder:
@@ -170,9 +215,13 @@ class Eggholder:
     def model():
         x_ = deepcopy(_x)
         y_ = deepcopy(_y)
-        return -(y_ + 47) * np.sin(np.sqrt(np.abs(x_ / 2 + y_ + 47))) - x_ * np.sin(
-            np.sqrt(np.abs(x_ - (y_ + 47)))
+        model = (
+            -(y_ + 47) * np.sin(np.sqrt(np.abs(y_ + x_ / 2 + 47)))
+            - x_ * np.sin(np.sqrt(np.abs(x_ - (y_ + 47))))
         )
+        model.lower = np.array([-100, -100])  # Adjusted from [-512, -512]
+        model.upper = np.array([100, 100])   # Adjusted from [512, 512]
+        return model
 
 
 class HolderTable:
@@ -180,9 +229,12 @@ class HolderTable:
     def model():
         x_ = deepcopy(_x)
         y_ = deepcopy(_y)
-        return -np.abs(
-            np.sin(x_) * np.cos(y_) * np.exp(np.abs(1 - (x_**2 + y_**2) ** 0.5 / np.pi))
+        model = -np.abs(
+            np.sin(x_) * np.cos(y_) * np.exp(np.abs(1 - (np.sqrt(x_**2 + y_**2) / np.pi)))
         )
+        model.lower = np.array([-10, -10])
+        model.upper = np.array([10, 10])
+        return model
 
 
 class McCormick:
@@ -190,7 +242,10 @@ class McCormick:
     def model():
         x_ = deepcopy(_x)
         y_ = deepcopy(_y)
-        return np.sin(x_ + y_) + (x_ - y_) ** 2 - 1.5 * x_ + 2.5 * y_ + 1
+        model = np.sin(x_ + y_) + (x_ - y_) ** 2 - 1.5 * x_ + 2.5 * y_ + 1
+        model.lower = np.array([-1.5, -3])
+        model.upper = np.array([4, 4])
+        return model
 
 
 class StyblinskiTang:
@@ -198,4 +253,7 @@ class StyblinskiTang:
     def model():
         x_ = deepcopy(_x)
         y_ = deepcopy(_y)
-        return 0.5 * ((x_**4 - 16 * x_**2 + 5 * x_) + (y_**4 - 16 * y_**2 + 5 * y_))
+        model = 0.5 * ((x_**4 - 16 * x_**2 + 5 * x_) + (y_**4 - 16 * y_**2 + 5 * y_))
+        model.lower = np.array([-5, -5])
+        model.upper = np.array([5, 5])
+        return model
