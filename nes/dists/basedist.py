@@ -2,6 +2,8 @@ from nes.models import Model
 import numpy as np
 import numpy.typing as npt
 from abc import ABC, abstractmethod
+from matplotlib.axes import Axes
+from matplotlib.patches import Ellipse
 
 
 class Dist(ABC):
@@ -75,3 +77,46 @@ class Dist(ABC):
     def get_optimum(self) -> npt.NDArray[np.float64]:
         """Get optimum parameters."""
         pass
+
+    def get_covariance(self) -> npt.NDArray[np.float64]:
+        """Get a covarinance matrix."""
+        raise NotImplementedError(
+            f"{__class__.__name__} does not implement a mean equivalent."
+        )
+
+    def get_mean(self) -> npt.NDArray[np.float64]:
+        """Get a covarinance matrix."""
+        raise NotImplementedError(
+            f"{__class__.__name__} does not implement a covarinance equivalent."
+        )
+
+    def plot_sigmas(
+        self,
+        ax: Axes,
+        i1: int = 0,
+        i2: int = 1,
+        sigmas: tuple[float, ...] = (1, 2, 3, 5),
+    ) -> None:
+        """Display the fitness against the first two dimensions."""
+        mu_2d = self.get_mean()[[i1, i2]]
+        print(mu_2d, self.get_covariance())
+        cov_2d = self.get_covariance()[np.ix_([i1, i2], [i1, i2])]
+        print(mu_2d, cov_2d)
+        eigvals, eigvecs = np.linalg.eigh(cov_2d)
+        order = np.argsort(eigvals)[::-1]
+        eigvals, eigvecs = eigvals[order], eigvecs[:, order]
+        angle = np.degrees(np.arctan2(*eigvecs[:, 0][::-1]))
+        for s in sigmas:
+            width, height = 2 * s * np.sqrt(eigvals)
+            ell = Ellipse(
+                xy=mu_2d,
+                width=width,
+                height=height,
+                angle=angle,
+                edgecolor="black",
+                facecolor="none",
+                linestyle="--",
+                linewidth=1.0,
+                label=f"{s}σ" if s == sigmas[0] else None,
+            )
+            ax.add_patch(ell)

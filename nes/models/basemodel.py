@@ -100,7 +100,7 @@ class Model(ABC):
     def __rtruediv__(self, other):
         """Support scalar / model or model / model (reversed)."""
         if isinstance(other, (int, float)):
-            return DivComposite.from_iter([ConstantModel(other), self])
+            return DivComposite.from_iter([ConstantModel(self, other), self])
         elif isinstance(other, Model):
             return DivComposite.from_iter([other, self])
         return NotImplemented
