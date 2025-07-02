@@ -8,11 +8,8 @@ class XDiagNormal(Dist):
     """Logarithmic representation of covariance parameters.
 
     Parameter layout:
-        [mu_0, mu_n, ln(sigma_0), ..., ln(sigma_n)]
+        [mu_0, ..., mu_n, ln(sigma_0), ..., ln(sigma_n)]
     """
-
-    var_eps = 1e-8
-    alpha = 0.2
 
     def __init__(self, num_dimensions: int) -> None:
         """Initialize instance of Normal distribution.

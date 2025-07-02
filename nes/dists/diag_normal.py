@@ -11,7 +11,6 @@ class DiagNormal(Dist):
     """
 
     var_eps = 1e-8
-    alpha = 0.2
 
     def __init__(self, num_dimensions: int) -> None:
         """Initialize instance of Normal distribution.
@@ -94,13 +93,8 @@ class DiagNormal(Dist):
         self, samples: npt.NDArray[np.float64], fitnesses: npt.NDArray[np.float64]
     ) -> npt.NDArray[np.float64]:
         """Get variation of parameters."""
-        variation = -(
-            self._inverse_fisher(samples) * self._gradient(samples, fitnesses)
-        )
-        norm = np.linalg.norm(variation)
-        eta = self.learning_rate / np.sqrt(1 + (self.alpha * norm) ** 2)
-        self._params += eta * variation
-        # need to clamp variance positive
+        variation = self._inverse_fisher(samples) * self._gradient(samples, fitnesses)
+        self._params += variation
         self._params[self._num_dimensions :] = np.maximum(
             self._params[self._num_dimensions :], self.var_eps
         )
@@ -124,3 +118,64 @@ class DiagNormal(Dist):
                 self._mean[0] + (i + 1) * self._variance[0] ** 0.5 * np.cos(t),
                 self._mean[1] + (i + 1) * self._variance[1] ** 0.5 * np.sin(t),
             )
+
+
+class DiagNormalSchaulLR(DiagNormal):
+    """Use Constant learning rates heuristically found by Schaul et al."""
+
+    def __init__(self, num_dimensions: int) -> None:
+        """Initialize instance of Normal distribution.
+
+        !!! Use factory methods instead !!!
+        """
+        super().__init__(num_dimensions)
+        mu_rates = np.full(self._num_dimensions, 1)
+        var_rates = np.full(
+            self._num_dimensions,
+            (3 + np.log(self._num_dimensions)) / 5 / np.sqrt(self._num_dimensions),
+        )
+        self.rates = np.concatenate((mu_rates, var_rates))
+
+    def param_variation(
+        self, samples: npt.NDArray[np.float64], fitnesses: npt.NDArray[np.float64]
+    ) -> npt.NDArray[np.float64]:
+        """Compute standard Parameter variation."""
+        variation = self._inverse_fisher(samples) * self._gradient(samples, fitnesses)
+        update = self.rates * variation
+        self._params += update
+        return update
+
+
+class DiagNormalAdaptive(DiagNormal):
+    """Use KL-based adaptive learning rates with EMA stabilization."""
+
+    klbudget: float = 0.1
+    ema_beta: float = 0.9
+
+    def __init__(self, num_dimensions: int) -> None:
+        """Initialize instance of Normal distribution.
+
+        !!! Use factory methods instead !!!
+        """
+        super().__init__(num_dimensions)
+        mu_rates = np.full(self._num_dimensions, 1.0)
+        var_rates = np.full(self._num_dimensions, 1.0)
+        self.rates = np.concatenate((mu_rates, var_rates))
+        self._grad_var_ema = 1.0
+
+    def param_variation(
+        self, samples: npt.NDArray[np.float64], fitnesses: npt.NDArray[np.float64]
+    ) -> npt.NDArray[np.float64]:
+        """Compute parameter variation with EMA-stabilized KL-based rate."""
+        variation = self._inverse_fisher(samples) * self._gradient(samples, fitnesses)
+        g_var = variation[self._num_dimensions :]
+        norm_sq = np.sum(g_var**2)
+        self._grad_var_ema = (
+            self.ema_beta * self._grad_var_ema + (1 - self.ema_beta) * norm_sq
+        )
+        self.rates[self._num_dimensions :] = 2.0 * np.sqrt(
+            self.klbudget / (self._grad_var_ema + 1e-12)
+        )
+        update = self.rates * variation
+        self._params += update
+        return update

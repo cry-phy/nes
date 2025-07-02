@@ -277,3 +277,26 @@ class StyblinskiTang:
         model.upper = np.array([5, 5])
         model.optimum = np.array([2.903534, 2.903534])
         return model
+
+
+__all__ = [
+    "Rastrigin",
+    "Ackley",
+    "Sphere",
+    "Rosenbrock",
+    "Beale",
+    "GoldsteinPrice",
+    "Booth",
+    "BukinN6",
+    "Matyas",
+    "Levi13",
+    "Griewank",
+    "Himmelblau",
+    "ThreeHumpCamel",
+    "Easom",
+    "CrossInTray",
+    "Eggholder",
+    "HolderTable",
+    "McCormick",
+    "StyblinskiTang",
+]
