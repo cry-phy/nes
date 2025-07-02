@@ -20,6 +20,7 @@ class Rastrigin:
         )
         model.lower = np.array([-5.12, -5.12])
         model.upper = np.array([5.12, 5.12])
+        model.optimum = np.array([0., 0.])
         return model
 
 
@@ -36,6 +37,8 @@ class Ackley:
         )
         model.lower = np.array([-32.768, -32.768])
         model.upper = np.array([32.768, 32.768])
+        model.optimum = np.array([0., 0.])
+
         return model
 
 
@@ -47,6 +50,8 @@ class Sphere:
         model = x_**2 + y_**2
         model.lower = np.array([-5.12, -5.12])
         model.upper = np.array([5.12, 5.12])
+        model.optimum = np.array([0., 0.])
+
         return model
 
 
@@ -58,6 +63,8 @@ class Rosenbrock:
         model = 100 * (y_ - x_**2) ** 2 + (1 - x_) ** 2
         model.lower = np.array([-2.048, -2.048])
         model.upper = np.array([2.048, 2.048])
+        model.optimum = np.array([1., 1.])
+
         return model
 
 
@@ -73,6 +80,8 @@ class Beale:
         )
         model.lower = np.array([-4.5, -4.5])
         model.upper = np.array([4.5, 4.5])
+        model.optimum = np.array([3., 0.5])
+
         return model
 
 
@@ -90,6 +99,7 @@ class GoldsteinPrice:
         model = term1 * term2
         model.lower = np.array([-2, -2])
         model.upper = np.array([2, 2])
+        model.optimum = np.array([3., -1.])
         return model
 
 
@@ -101,6 +111,7 @@ class Booth:
         model = (x_ + 2 * y_ - 7) ** 2 + (2 * x_ + y_ - 5) ** 2
         model.lower = np.array([-10, -10])
         model.upper = np.array([10, 10])
+        model.optimum = np.array([1., 3.])
         return model
 
 
@@ -112,6 +123,7 @@ class BukinN6:
         model = 100 * (np.abs(y_ - 0.01 * x_**2) ** 0.5) + 0.01 * np.abs(x_ + 10)
         model.lower = np.array([-15, -3])
         model.upper = np.array([-5, 3])
+        model.optimum = np.array([-10., 1.])
         return model
 
 
@@ -123,6 +135,7 @@ class Matyas:
         model = 0.26 * (x_**2 + y_**2) - 0.48 * x_ * y_
         model.lower = np.array([-10, -10])
         model.upper = np.array([10, 10])
+        model.optimum = np.array([0., 0.])
         return model
 
 
@@ -138,6 +151,7 @@ class Levi13:
         )
         model.lower = np.array([-10, -10])
         model.upper = np.array([10, 10])
+        model.optimum = np.array([1., 1.])
         return model
 
 
@@ -153,6 +167,7 @@ class Griewank:
         )
         model.lower = np.array([-100, -100])  # Adjusted from [-600, -600]
         model.upper = np.array([100, 100])   # Adjusted from [600, 600]
+        model.optimum = np.array([0., 0.])
         return model
 
 
@@ -175,6 +190,7 @@ class ThreeHumpCamel:
         model = 2 * x_**2 - 1.05 * x_**4 + (x_**6) / 6 + x_ * y_ + y_**2
         model.lower = np.array([-5, -5])
         model.upper = np.array([5, 5])
+        model.optimum = np.array([0., 0.])
         return model
 
 
@@ -188,6 +204,7 @@ class Easom:
         )
         model.lower = np.array([-50, -50])  # Adjusted from [-100, -100]
         model.upper = np.array([50, 50])   # Adjusted from [100, 100]
+        model.optimum = np.array([np.pi, np.pi])
         return model
 
 
@@ -207,6 +224,7 @@ class CrossInTray:
         model = -0.0001 * expr**0.1
         model.lower = np.array([-10, -10])
         model.upper = np.array([10, 10])
+        model.optimum = np.array([0., 0.])
         return model
 
 
@@ -219,8 +237,9 @@ class Eggholder:
             -(y_ + 47) * np.sin(np.sqrt(np.abs(y_ + x_ / 2 + 47)))
             - x_ * np.sin(np.sqrt(np.abs(x_ - (y_ + 47))))
         )
-        model.lower = np.array([-100, -100])  # Adjusted from [-512, -512]
-        model.upper = np.array([100, 100])   # Adjusted from [512, 512]
+        model.lower = np.array([-512, -512])
+        model.upper = np.array([512, 512])
+        model.optimum = np.array([512., 404.2319])
         return model
 
 
@@ -256,6 +275,7 @@ class StyblinskiTang:
         model = 0.5 * ((x_**4 - 16 * x_**2 + 5 * x_) + (y_**4 - 16 * y_**2 + 5 * y_))
         model.lower = np.array([-5, -5])
         model.upper = np.array([5, 5])
+        model.optimum = np.array([2.903534, 2.903534])
         return model
 
 

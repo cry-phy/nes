@@ -26,5 +26,5 @@ __all__ = [
     "XDiagNormalSchaulLR",
     "XNormal",
     "XNormalAdaptive",
-    "XNormalSchaulLR",
+    "XNormalSchaulRL",
 ]
