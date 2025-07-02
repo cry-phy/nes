@@ -1,5 +1,4 @@
 from nes.dists import Dist
-from nes.dists.utils import grad_dep_rate
 from nes.models import Model
 import numpy as np
 import numpy.typing as npt
@@ -22,12 +21,10 @@ class XDiagNormal(Dist):
         """
         super().__init__(num_dimensions)
         self._params: npt.NDArray[np.float64] = np.zeros(2 * num_dimensions)
-        self._var_ma: float = 1e6
-        self._fac_ma: float = 0.3
 
     @classmethod
     def from_dimensions(cls, num_dimensions: int) -> "Dist":
-        """Generate empty Ditsribution."""
+        """Generate empty Distribution."""
         return cls(num_dimensions)
 
     @classmethod
@@ -74,49 +71,16 @@ class XDiagNormal(Dist):
         """Analytically compute Fisher matrix."""
         invfisher = self._params.copy()
         invfisher[: self._num_dimensions] = self._variance
-        invfisher[self._num_dimensions :] = 1
+        invfisher[self._num_dimensions :] = 2.0
         return invfisher
 
     def param_variation(
         self, samples: npt.NDArray[np.float64], fitnesses: npt.NDArray[np.float64]
     ) -> npt.NDArray[np.float64]:
         """Compute standard Parameter variation."""
-        variation = -self._inverse_fisher(samples) * self._gradient(samples, fitnesses)
-        self._params += self._adaptive_rate(variation) * variation
-        self._limit_variance()
-        diff_ma = np.linalg.norm(variation[self._num_dimensions :]) - self._var_ma
-        self._var_ma = float((1 - self._fac_ma) * self._var_ma + self._fac_ma * diff_ma)
+        variation = self._inverse_fisher(samples) * self._gradient(samples, fitnesses)
+        self._params += variation
         return variation
-
-    def _limit_variance(self, threshold: float = 1e-1) -> None:
-        """Limit differences in variances."""
-        log_threshold = np.log(threshold)
-        highest = max(self._params[self._num_dimensions :])
-        too_low_mask = (self._params[self._num_dimensions :] - highest) <= log_threshold
-        self._params[self._num_dimensions :][too_low_mask] = highest + log_threshold
-
-    def _adaptive_rate(self, variation) -> npt.NDArray:
-        """Generate adaptive rate vector."""
-        eta = np.concatenate(
-            [
-                grad_dep_rate(variation[: self._num_dimensions]),
-                grad_dep_rate(variation[self._num_dimensions :])
-                * self._stagnation_factor(),
-            ]
-        )
-        return eta
-
-    def _stagnation_factor(
-        self,
-        lower: float = 0,
-        upper: float = 20,
-        steep: float = 1,
-        thresh: float = 1e-2,
-    ) -> float | npt.NDArray:
-        """Adjust variance according to stagnation of parameters."""
-        return lower + (upper - lower) * 1 / (
-            1 + np.exp(steep * (self._var_ma - thresh))
-        )
 
     def get_optimum(self) -> npt.NDArray[np.float64]:
         """Get optimum mean parameters."""
@@ -130,3 +94,64 @@ class XDiagNormal(Dist):
         self._params[self._num_dimensions :] = np.log(
             parameters[self._num_dimensions :]
         )
+
+
+class XDiagNormalSchaulLR(XDiagNormal):
+    """Use Constant learning rates heuristically found by Schaul et al."""
+
+    def __init__(self, num_dimensions: int) -> None:
+        """Initialize instance of Normal distribution.
+
+        !!! Use factory methods instead !!!
+        """
+        super().__init__(num_dimensions)
+        mu_rates = np.full(self._num_dimensions, 1)
+        var_rates = np.full(
+            self._num_dimensions,
+            (3 + np.log(self._num_dimensions)) / 5 / np.sqrt(self._num_dimensions),
+        )
+        self.rates = np.concatenate((mu_rates, var_rates))
+
+    def param_variation(
+        self, samples: npt.NDArray[np.float64], fitnesses: npt.NDArray[np.float64]
+    ) -> npt.NDArray[np.float64]:
+        """Compute standard Parameter variation."""
+        variation = self._inverse_fisher(samples) * self._gradient(samples, fitnesses)
+        update = self.rates * variation
+        self._params += update
+        return update
+
+
+class XDiagNormalAdaptive(XDiagNormal):
+    """Use KL-based adaptive learning rates with EMA stabilization."""
+
+    klbudget: float = 0.1
+    ema_beta: float = 0.9
+
+    def __init__(self, num_dimensions: int) -> None:
+        """Initialize instance of Normal distribution.
+
+        !!! Use factory methods instead !!!
+        """
+        super().__init__(num_dimensions)
+        mu_rates = np.full(self._num_dimensions, 1.0)
+        var_rates = np.full(self._num_dimensions, 1.0)
+        self.rates = np.concatenate((mu_rates, var_rates))
+        self._grad_var_ema = 1.0
+
+    def param_variation(
+        self, samples: npt.NDArray[np.float64], fitnesses: npt.NDArray[np.float64]
+    ) -> npt.NDArray[np.float64]:
+        """Compute parameter variation with EMA-stabilized KL-based rate."""
+        variation = self._inverse_fisher(samples) * self._gradient(samples, fitnesses)
+        g_var = variation[self._num_dimensions :]
+        norm_sq = np.sum(g_var**2)
+        self._grad_var_ema = (
+            self.ema_beta * self._grad_var_ema + (1 - self.ema_beta) * norm_sq
+        )
+        self.rates[self._num_dimensions :] = 2.0 * np.sqrt(
+            self.klbudget / (self._grad_var_ema + 1e-12)
+        )
+        update = self.rates * variation
+        self._params += update
+        return update
