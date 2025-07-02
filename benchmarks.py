@@ -75,15 +75,41 @@ def plot_samples_analysis(sample_numbers, Distributions, Model, max_steps=1000, 
             optimizer = Optimizer(model, dist,sample_number)
             for n in range(max_steps):
                 optimizer.step()
-                if np.linalg.norm(dist.get_optimum()) < 1e-3:
+                if np.linalg.norm(dist.get_optimum()- model.optimum)  < 1e-3:
                     steps[i, j] = n
                     break
     for i, Distribution in enumerate(Distributions):
         plt.loglog(sample_numbers, steps[i], label=Distribution.__name__)
 
-    plt.xlabel("Dimension")
-    plt.ylabel(r"$L_2 $ Error")
-    plt.title("Samples ")
+    plt.xlabel("Samples")
+    plt.ylabel("Number of steps to convergence")
+    plt.title("Samples analysis")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+
+
+def plot_minima_analysis(num_runs:int, Distributions, Model, sample_number=100, steps=1000, initial_guess=None):
+    distances = np.zeros((len(Distributions), num_runs))
+
+
+    for i, Distribution in enumerate(Distributions):
+        for j in range(num_runs):
+            model = Model.model()
+            dist = Distribution.from_model(model)
+            if initial_guess is not None:
+                dist.set_init_params(initial_guess)
+            optimizer = Optimizer(model, dist,sample_number)
+            for _ in range(steps):
+                optimizer.step()
+                distances[i, j] = np.linalg.norm(dist.get_optimum()- model.optimum)
+    for i, Distribution in enumerate(Distributions):
+        plt.plot(np.arange(num_runs), distances[i], marker="o", label=Distribution.__name__)
+
+    plt.xlabel("Run")
+    plt.ylabel("Distance from global minimum")
+    plt.title("Benchmarking local minima")
     plt.legend()
     plt.grid(True)
     plt.show()
@@ -91,15 +117,14 @@ def plot_samples_analysis(sample_numbers, Distributions, Model, max_steps=1000, 
 
 
 
+# dims = np.logspace(1, 8, 6, base=2, dtype=int)
 
-dims = np.logspace(1, 8, 6, base=2, dtype=int)
+# plot_samples_analysis(dims, [DiagNormal, XDiagNormal], Ackley)
 
-plot_samples_analysis(dims, [DiagNormal, XDiagNormal], Ackley)
-
-print(dims)
+# print(dims)
 # plot_dims_analysis(dims, [DiagNormal, XDiagNormal])
 
-
+plot_minima_analysis(30,  [DiagNormal, XDiagNormal], Ackley)
 
 # my_model = Ackley.model()
 # my_conv = convergence(my_model, XDiagNormal.from_model(my_model), 100)
