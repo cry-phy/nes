@@ -1,7 +1,7 @@
 
 import numpy as np
 import numpy.typing as npt
-from nes.dists import Dist, DiagNormal
+from nes.dists import Dist, DiagNormal, XDiagNormal
 from nes.models import NPolynome
 from nes.optimizer import Optimizer
 # from nes.models.benchmarks2D import *
@@ -22,25 +22,45 @@ def convergence(model, dist: Dist, sample_num: int, n_steps = 1000, initial_gues
 
 
 def plot_dims_analysis(dims, Distributions, sample_num = 100, n_steps = 1000, initial_guess=None):
-    errors = []
-    for Distribution in Distributions:
-        for dim in dims:
-            weights = np.array([[0]*dim, [0]*dim, [1.]*dim])
+
+
+    errors = np.zeros((len(Distributions), len(dims)))
+
+    for i, Distribution in enumerate(Distributions):
+        for j, dim in enumerate(dims):
+            weights = np.array([[0] * dim, [0] * dim, [-1.] * dim])
             model = NPolynome(weights)
             model.lower = np.full(weights.shape[1], -20)
             model.upper = np.full(weights.shape[1], +20)
+
             dist = Distribution.from_model(model)
+
             if initial_guess is not None:
+                if len(initial_guess) != len(dims):
+                    raise ValueError("List of initial guesses does not match dimensions")
                 dist.set_init_params(initial_guess)
+
             optimizer = Optimizer(model, dist, sample_num)
+
             for _ in range(n_steps):
                 optimizer.step()
-            errors.append(np.linalg.norm(dist.get_optimum()))
-    plt.plot(dims, errors)
+
+            error = np.linalg.norm(dist.get_optimum())
+            errors[i, j] = error
+            # print(f"{Distribution.__name__} | dim: {dim} | error: {error}")
+
+    for i, Distribution in enumerate(Distributions):
+        plt.plot(dims, errors[i], label=Distribution.__name__)
+
+    plt.xlabel("Dimension")
+    plt.ylabel(r"$L_2 $ Error")
+    plt.title(f"Optimization Error vs Dimension for {n_steps} steps and {sample_num} samples ")
+    plt.legend()
+    plt.grid(True)
     plt.show()
 
-dims = np.arange(1, 101, 4, dtype=int)
-plot_dims_analysis(dims, [DiagNormal])
+dims = np.arange(1, 500, 20, dtype=int)
+plot_dims_analysis(dims, [DiagNormal, XDiagNormal])
 
 
 # my_model = Rastrigin.model()
