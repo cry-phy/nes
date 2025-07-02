@@ -36,7 +36,7 @@ class StudentTDist(Dist):
     @property
     def _nu(self):
         """The _stddevs property."""
-        return np.exp(self._params[2 * self._num_dimensions])
+        return np.exp(self._params[-1])
 
     def set_init_params(
         self, params: npt.NDArray[np.float64]
@@ -122,5 +122,68 @@ class StudentTDist(Dist):
         grad = self._gradient(samples, fitnesses)
         fisher_inv = self._inverse_fisher(samples)
         variation = fisher_inv * grad
-        self._params += -self._learning_rate * variation
+        self._params += -variation
         return variation
+
+
+class StudentTDistSchaulLR(StudentTDist):
+    """Use Constant learning rates heuristically found by Schaul et al."""
+
+    def __init__(self, num_dimensions: int) -> None:
+        """Initialize instance of Normal distribution.
+
+        !!! Use factory methods instead !!!
+        """
+        super().__init__(num_dimensions)
+        mu_rates = np.full(self._num_dimensions, 1)
+        var_rates = np.full(
+            self._num_dimensions,
+            (3 + np.log(self._num_dimensions)) / 5 / np.sqrt(self._num_dimensions),
+        )
+        nu_rates = np.full(1, 1)
+        self.rates = np.concatenate((mu_rates, var_rates, nu_rates))
+
+    def param_variation(
+        self, samples: npt.NDArray[np.float64], fitnesses: npt.NDArray[np.float64]
+    ) -> npt.NDArray[np.float64]:
+        """Compute standard Parameter variation."""
+        variation = self._inverse_fisher(samples) * self._gradient(samples, fitnesses)
+        update = self.rates * variation
+        self._params += update
+        return update
+
+
+class StudentTDistAdaptive(StudentTDist):
+    """Use KL-based adaptive learning rates with EMA stabilization."""
+
+    klbudget: float = 0.1
+    ema_beta: float = 0.9
+
+    def __init__(self, num_dimensions: int) -> None:
+        """Initialize instance of Normal distribution.
+
+        !!! Use factory methods instead !!!
+        """
+        super().__init__(num_dimensions)
+        mu_rates = np.full(self._num_dimensions, 1.0)
+        var_rates = np.full(self._num_dimensions, 1.0)
+        nu_rates = np.full(1, 1.0)
+        self.rates = np.concatenate((mu_rates, var_rates, nu_rates))
+        self._grad_var_ema = 0.5
+
+    def param_variation(
+        self, samples: npt.NDArray[np.float64], fitnesses: npt.NDArray[np.float64]
+    ) -> npt.NDArray[np.float64]:
+        """Compute parameter variation with EMA-stabilized KL-based rate."""
+        variation = self._inverse_fisher(samples) * self._gradient(samples, fitnesses)
+        g_var = variation[self._num_dimensions :]
+        norm_sq = np.sum(g_var**2)
+        self._grad_var_ema = (
+            self.ema_beta * self._grad_var_ema + (1 - self.ema_beta) * norm_sq
+        )
+        self.rates[self._num_dimensions : 2 * self._num_dimensions] = 2.0 * np.sqrt(
+            self.klbudget / (self._grad_var_ema + 1e-12)
+        )
+        update = self.rates * variation
+        self._params += update
+        return update

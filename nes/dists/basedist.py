@@ -64,9 +64,7 @@ class Dist(ABC):
         self, samples: npt.NDArray[np.float64], fitnesses: npt.NDArray[np.float64]
     ) -> npt.NDArray[np.float64]:
         """Get variation of parameters."""
-        variation = self._inverse_fisher(samples) @ self._gradient(samples, fitnesses)
-        self._params += -self._learning_rate * variation
-        return variation
+        pass
 
     @abstractmethod
     def set_init_params(self, *args, **kwargs) -> npt.NDArray[np.float64]:
@@ -77,18 +75,3 @@ class Dist(ABC):
     def get_optimum(self) -> npt.NDArray[np.float64]:
         """Get optimum parameters."""
         pass
-
-    def _inverse_fisher(
-        self, samples: npt.NDArray[np.float64]
-    ) -> npt.NDArray[np.float64]:
-        """Compute inverse Fisher matrix.
-
-        Depending on the case can be done closed form or via samples.
-        """
-        raise NotImplementedError
-
-    def _gradient(
-        self, samples: npt.NDArray[np.float64], fitnesses: npt.NDArray[np.float64]
-    ) -> npt.NDArray[np.float64]:
-        """Compute the gradient from the samples and fitnesses."""
-        raise NotImplementedError
