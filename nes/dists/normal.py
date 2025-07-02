@@ -2,7 +2,7 @@ from nes.dists import Dist
 from nes.models import Model
 import numpy as np
 import numpy.typing as npt
-from  scipy.linalg import cholesky, solve_triangular, cho_factor, cho_solve
+from scipy.linalg import cholesky, solve_triangular, cho_factor, cho_solve
 
 
 class Normal(Dist):
@@ -25,13 +25,10 @@ class Normal(Dist):
         self._param_A_var: npt.NDArray[np.float64] = np.eye(num_dimensions)
         self._param_mean: npt.NDArray[np.float64] = np.zeros(num_dimensions)
 
-
     @property
     def _mean(self) -> npt.NDArray[np.float64]:
         """The mean value."""
         return self._param_mean.copy()
-
-
 
     @property
     def _variance(self) -> npt.NDArray[np.float64]:
@@ -60,32 +57,40 @@ class Normal(Dist):
     def get_samples(self, number: int) -> npt.NDArray[np.float64]:
         """Generate samples."""
         z = np.random.randn(number, self._num_dimensions)
-        samples = self._mean.reshape((len(self._mean), 1)) + np.matmul(self._param_A_var, z.T)
+        samples = self._mean.reshape((len(self._mean), 1)) + np.matmul(
+            self._param_A_var, z.T
+        )
         return samples.T
 
-    def _gradient(self, samples: npt.NDArray, fitnesses: npt.NDArray) -> tuple[npt.NDArray, npt.NDArray, npt.NDArray, npt.NDArray]:
+    def _gradient(
+        self, samples: npt.NDArray, fitnesses: npt.NDArray
+    ) -> tuple[npt.NDArray, npt.NDArray, npt.NDArray, npt.NDArray]:
         """Compute gradient from samples."""
         gradient_mean = np.zeros(shape=(self._num_dimensions))
         gradient_A_var = np.zeros(shape=(self._num_dimensions, self._num_dimensions))
         fischer_mu = np.zeros(shape=(self._num_dimensions, self._num_dimensions))
         fischer_A = np.zeros(shape=(self._num_dimensions, self._num_dimensions))
-        inverse_A_var = solve_triangular(self._param_A_var, np.eye(self._num_dimensions))
+        inverse_A_var = solve_triangular(
+            self._param_A_var, np.eye(self._num_dimensions)
+        )
         invVariance = inverse_A_var @ inverse_A_var.T
         adjusted_fitness = fitnesses - fitnesses.min()
         adjusted_fitness /= adjusted_fitness.sum()
         for idx, sample in enumerate(samples):
             log_grad_mean = invVariance @ (sample - self._mean)
-            log_grad_variance = (-0.5 * invVariance
-                                 + 0.5 * np.outer(invVariance @ (sample-self._mean) ,
-                                                   (sample-self._mean).T @ invVariance
-                                                )
-                                )
+            log_grad_variance = -0.5 * invVariance + 0.5 * np.outer(
+                invVariance @ (sample - self._mean),
+                (sample - self._mean).T @ invVariance,
+            )
             gradient_mean += adjusted_fitness[idx] * log_grad_mean
-            gradient_A_var += adjusted_fitness[idx] * self._param_A_var @ (log_grad_variance + log_grad_variance.T)
+            gradient_A_var += (
+                adjusted_fitness[idx]
+                * self._param_A_var
+                @ (log_grad_variance + log_grad_variance.T)
+            )
             fischer_mu += np.outer(log_grad_mean, log_grad_mean)
-            fischer_A +=  log_grad_variance@log_grad_variance.T
+            fischer_A += log_grad_variance @ log_grad_variance.T
         return gradient_mean, gradient_A_var, fischer_mu, fischer_A
-
 
     def param_variation(
         self, samples: npt.NDArray[np.float64], fitnesses: npt.NDArray[np.float64]
@@ -98,9 +103,9 @@ class Normal(Dist):
         # Having to invert the Fisher matrix fully
         variation_mean = cho_solve((cho_fischer_mu, lower), grad_mean)
         variation_A = cho_solve((cho_fischer_A, lower), grad_A)
-        self._param_mean +=  variation_mean
+        self._param_mean += variation_mean
         self._param_A_var += variation_A
-        #Handeling variances to return in a list so optimizer can handle return value
+        # Handeling variances to return in a list so optimizer can handle return value
         variation = np.concatenate((variation_mean, np.diag(variation_A)))
         return variation
 
@@ -108,7 +113,9 @@ class Normal(Dist):
         """Get optimum parameters."""
         return self._mean.copy()
 
-    def set_init_params(self, means: npt.NDArray[np.float64], variance: npt.NDArray[np.float64]) -> None:
+    def set_init_params(
+        self, means: npt.NDArray[np.float64], variance: npt.NDArray[np.float64]
+    ) -> None:
         """Get initial parameters."""
         self._param_mean = means
         # self._param_variance = variance
@@ -118,13 +125,16 @@ class Normal(Dist):
         """Draw ellipsis of sigma bound."""
         pass
 
+
 class NormalSchaulLR(Normal):
     """Use Constant learning rates heuristically found by Schaul et al."""
 
     def __init__(self, num_dimensions: int) -> None:
         super().__init__(num_dimensions)
         mu_rates = 1
-        var_rates = (3 + np.log(self._num_dimensions)) / 5 / np.sqrt(self._num_dimensions)
+        var_rates = (
+            (3 + np.log(self._num_dimensions)) / 5 / np.sqrt(self._num_dimensions)
+        )
         self.rates = np.concatenate((mu_rates, var_rates))
 
     def param_variation(
@@ -140,6 +150,6 @@ class NormalSchaulLR(Normal):
         variation_A = cho_solve((cho_fischer_A, lower), grad_A)
         self._param_mean += self.rates[0] * variation_mean
         self._param_A_var += self.rates[1] * variation_A
-        #Handeling variances to return in a list so optimizer can handle return value
+        # Handeling variances to return in a list so optimizer can handle return value
         variation = np.concatenate((variation_mean, np.diag(variation_A)))
         return variation

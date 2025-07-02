@@ -257,3 +257,26 @@ class StyblinskiTang:
         model.lower = np.array([-5, -5])
         model.upper = np.array([5, 5])
         return model
+
+
+__all__ = [
+    "Rastrigin",
+    "Ackley",
+    "Sphere",
+    "Rosenbrock",
+    "Beale",
+    "GoldsteinPrice",
+    "Booth",
+    "BukinN6",
+    "Matyas",
+    "Levi13",
+    "Griewank",
+    "Himmelblau",
+    "ThreeHumpCamel",
+    "Easom",
+    "CrossInTray",
+    "Eggholder",
+    "HolderTable",
+    "McCormick",
+    "StyblinskiTang",
+]
