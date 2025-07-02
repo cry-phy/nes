@@ -99,9 +99,7 @@ class Dist(ABC):
     ) -> None:
         """Display the fitness against the first two dimensions."""
         mu_2d = self.get_mean()[[i1, i2]]
-        print(mu_2d, self.get_covariance())
         cov_2d = self.get_covariance()[np.ix_([i1, i2], [i1, i2])]
-        print(mu_2d, cov_2d)
         eigvals, eigvecs = np.linalg.eigh(cov_2d)
         order = np.argsort(eigvals)[::-1]
         eigvals, eigvecs = eigvals[order], eigvecs[:, order]
