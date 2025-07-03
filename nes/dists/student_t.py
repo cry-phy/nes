@@ -28,6 +28,11 @@ class StudentTDist(Dist):
         """The _means property."""
         return self._params[: self._num_dimensions]
 
+    @_mean.setter
+    def _mean(self, mean) -> None:
+        """The mean value."""
+        self._params[: self._num_dimensions] = mean
+
     @property
     def _stddev(self):
         """The _stddevs property."""

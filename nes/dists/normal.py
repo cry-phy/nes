@@ -30,6 +30,11 @@ class Normal(Dist):
         """The mean value."""
         return self._param_mean.copy()
 
+    @_mean.setter
+    def _mean(self, mean) -> None:
+        """The mean value."""
+        self._param_mean[: self._num_dimensions] = mean
+
     @property
     def _variance(self) -> npt.NDArray[np.float64]:
         """The dimensional sigmas."""

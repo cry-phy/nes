@@ -30,6 +30,11 @@ class DiagNormal(Dist):
         """The mean value."""
         return self._params[: self._num_dimensions].copy()
 
+    @_mean.setter
+    def _mean(self, mean) -> None:
+        """The mean value."""
+        self._params[: self._num_dimensions] = mean
+
     @property
     def _variance(self) -> npt.NDArray[np.float64]:
         """The dimensional sigmas."""
@@ -58,7 +63,8 @@ class DiagNormal(Dist):
     def get_samples(self, number: int) -> npt.NDArray[np.float64]:
         """Generate samples."""
         z = np.random.randn(number, self._num_dimensions)
-        return self._mean + z * np.sqrt(self._variance)
+        safe_variance = np.maximum(self._variance, 1e-8)
+        return self._mean + z * np.sqrt(safe_variance)
 
     def _gradient(self, samples: npt.NDArray, fitnesses: npt.NDArray) -> npt.NDArray:
         """Compute gradient from samples."""

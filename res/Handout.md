@@ -39,11 +39,6 @@ where $\pi(\mathbf{z}_k \mid \boldsymbol{\theta})$ is the PDF at sample $\mathbf
 Specializing this expression for the 3D separable Gaussian case, we obtain the following analytic gradient of the log-likelihood:
 
 $$
-TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
-simple derivation?
-$$
-
-$$
 \nabla_{\mu_i} \log \pi(\mathbf{z}_k \mid \boldsymbol{\theta}) = \frac{z_{k,i} - \mu_i}{\sigma_i^2}, \quad \nabla_{\sigma_i} \log \pi(\mathbf{z}_k \mid \boldsymbol{\theta}) = \frac{(z_{k,i} - \mu_i)^2}{\sigma_i^3} - \frac{1}{\sigma_i}
 $$
 
@@ -95,11 +90,6 @@ $$
 $$
 
 In the case of our separable Gaussian distribution we can attain the Fisher matrix analytically:
-
-$$
-TODODODODODDPDPDP
-simple derivation?
-$$
 
 $$
 \mathbf{F}_{\mu_i, \mu_i} = \frac{1}{\sigma_i^2} \hspace{20px} \mathbf{F}_{\sigma_i, \sigma_i} =

@@ -31,6 +31,12 @@ class XNormal(Dist):
         """The mean property."""
         return self._param_mean
 
+    @_mean.setter
+    def _mean(self, mean) -> None:
+        """The mean value."""
+        self._param_mean[: self._num_dimensions] = mean
+
+
     @classmethod
     def from_dimensions(cls, num_dimensions: int) -> "XNormal":
         """Generate Normal distribution with number of dimensions."""
@@ -56,7 +62,6 @@ class XNormal(Dist):
     ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
         """Generate gradient."""
         diffs = (samples - self._mean) @ self._param_A_inv
-
         adjusted_fitness = -fitnesses + fitnesses.max()
         weights = adjusted_fitness / adjusted_fitness.sum()
         # can pull out I and sum w@I = 1 since sum w = 1
@@ -136,7 +141,7 @@ class XNormalAdaptive(XNormal):
     ]:
         """Compute gradient matrix gradient_matrix explicitly, for adaptive KL scaling."""
         diffs = (samples - self._mean) @ self._param_A_inv
-        adjusted_fitness = fitnesses - fitnesses.min()
+        adjusted_fitness = -fitnesses + fitnesses.max()
         weights = adjusted_fitness / adjusted_fitness.sum()
         weights = weights.flatten()
 

@@ -40,6 +40,11 @@ class XDiagNormal(Dist):
         """The mean value."""
         return self._params[: self._num_dimensions].copy()
 
+    @_mean.setter
+    def _mean(self, mean) -> None:
+        """The mean value."""
+        self._params[: self._num_dimensions] = mean
+
     @property
     def _variance(self) -> npt.NDArray[np.float64]:
         """The dimensional sigmas."""
