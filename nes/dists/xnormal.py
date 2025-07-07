@@ -36,7 +36,6 @@ class XNormal(Dist):
         """The mean value."""
         self._param_mean[: self._num_dimensions] = mean
 
-
     @classmethod
     def from_dimensions(cls, num_dimensions: int) -> "XNormal":
         """Generate Normal distribution with number of dimensions."""
@@ -118,8 +117,8 @@ class XNormalSchaulLR(XNormal):
         !!! Use factory methods instead !!!
         """
         super().__init__(num_dimensions)
-        self._eta_A = 3 + np.log(self._num_dimensions) / 5 / np.sqrt(
-            self._num_dimensions
+        self._eta_A = (3 + np.log(self._num_dimensions)) / (
+            5 * np.sqrt(self._num_dimensions)
         )
 
 

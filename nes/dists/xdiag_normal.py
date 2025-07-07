@@ -18,6 +18,8 @@ class XDiagNormal(Dist):
         """
         super().__init__(num_dimensions)
         self._params: npt.NDArray[np.float64] = np.zeros(2 * num_dimensions)
+        self._count: int = 3
+        self._decay_rate: int = 20 * np.sqrt(self._num_dimensions)
 
     @classmethod
     def from_dimensions(cls, num_dimensions: int) -> "Dist":
@@ -64,7 +66,8 @@ class XDiagNormal(Dist):
         gradients[:, : self._num_dimensions] = diffs / self._variance
         gradients[:, self._num_dimensions :] = diffs**2 / self._variance - 1
         adjusted_fitness = -fitnesses + fitnesses.max()
-        weighted_gradients = gradients * (adjusted_fitness / adjusted_fitness.sum())
+        weights = adjusted_fitness / adjusted_fitness.sum()
+        weighted_gradients = gradients * weights
         return weighted_gradients.sum(axis=0)
 
     def _inverse_fisher(
@@ -82,6 +85,12 @@ class XDiagNormal(Dist):
         """Compute standard Parameter variation."""
         variation = self._inverse_fisher(samples) * self._gradient(samples, fitnesses)
         self._params += variation
+        min_log_sigma = -self._count // self._decay_rate
+        self._params[self._num_dimensions :] = np.maximum(
+            self._params[self._num_dimensions :],
+            min_log_sigma,
+        )
+        self._count += 1
         return variation
 
     def get_optimum(self) -> npt.NDArray[np.float64]:
@@ -129,13 +138,19 @@ class XDiagNormalSchaulLR(XDiagNormal):
         variation = self._inverse_fisher(samples) * self._gradient(samples, fitnesses)
         update = self.rates * variation
         self._params += update
+        min_log_sigma = -self._count // self._decay_rate
+        self._params[self._num_dimensions :] = np.maximum(
+            self._params[self._num_dimensions :],
+            min_log_sigma,
+        )
+        self._count += 1
         return update
 
 
 class XDiagNormalAdaptive(XDiagNormal):
     """Use KL-based adaptive learning rates with EMA stabilization."""
 
-    klbudget: float = 0.1
+    klbudget: float = 0.4
     ema_beta: float = 0.9
 
     def __init__(self, num_dimensions: int) -> None:
@@ -159,9 +174,14 @@ class XDiagNormalAdaptive(XDiagNormal):
         self._grad_var_ema = (
             self.ema_beta * self._grad_var_ema + (1 - self.ema_beta) * norm_sq
         )
-        self.rates[self._num_dimensions :] = 2.0 * np.sqrt(
-            self.klbudget / (self._grad_var_ema + 1e-12)
-        )
+        target_rate = np.sqrt(self.klbudget / (self._grad_var_ema + 1e-12))
+        self.rates = (1 - 0.1) * self.rates + 0.1 * target_rate
         update = self.rates * variation
         self._params += update
+        min_log_sigma = -self._count // self._decay_rate
+        self._params[self._num_dimensions :] = np.maximum(
+            self._params[self._num_dimensions :],
+            min_log_sigma,
+        )
+        self._count += 1
         return update
