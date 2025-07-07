@@ -4,6 +4,7 @@ import numpy.typing as npt
 from scipy.stats import chi2
 from nes.models import Model
 from scipy.special import psi
+import warnings
 
 
 class StudentTDist(Dist):
@@ -61,7 +62,7 @@ class StudentTDist(Dist):
     def _gradient(
         self, samples: npt.NDArray[np.float64], fitnesses: npt.NDArray[np.float64]
     ) -> npt.NDArray[np.float64]:
-        n, d = samples.shape
+        _, d = samples.shape
         mean = self._mean
         std = self._stddev
         nu = self._nu
@@ -83,8 +84,8 @@ class StudentTDist(Dist):
         dlogp_dlognu = nu * (term1 + term2 + term3 + term4)
 
         # --- Fitness-weighted gradients
-        ranks = np.argsort(np.argsort(fitnesses.flatten()))
-        inv_ranks = n - 1 - ranks
+        ranks = np.argsort(-fitnesses.flatten())
+        inv_ranks = np.argsort(ranks)
         weights = inv_ranks.reshape(-1, 1) / inv_ranks.sum()
         grad_mu = np.mean(weights * dlogp_dmu, axis=0)
         grad_logstd = np.mean(weights * dlogp_dlogstd, axis=0)
@@ -93,7 +94,7 @@ class StudentTDist(Dist):
         return np.concatenate([grad_mu, grad_logstd, grad_lognu.ravel()])
 
     def _inverse_fisher(self, samples: np.ndarray) -> np.ndarray:
-        n, d = samples.shape
+        _, d = samples.shape
         mean = self._mean
         std = self._stddev
         nu = self._nu
@@ -127,7 +128,7 @@ class StudentTDist(Dist):
         grad = self._gradient(samples, fitnesses)
         fisher_inv = self._inverse_fisher(samples)
         variation = fisher_inv * grad
-        self._params += -variation
+        self._params += variation
         return variation
 
     def get_covariance(self) -> npt.NDArray[np.float64]:
@@ -167,7 +168,11 @@ class StudentTDistSchaulLR(StudentTDist):
 
 
 class StudentTDistAdaptive(StudentTDist):
-    """Use KL-based adaptive learning rates with EMA stabilization."""
+    """Use KL-based adaptive learning rates with EMA stabilization.
+
+    This reuses the KL divergence of the normal distributions which is inaccurate
+    and causes premature convergence.
+    """
 
     klbudget: float = 0.1
     ema_beta: float = 0.9
@@ -177,6 +182,11 @@ class StudentTDistAdaptive(StudentTDist):
 
         !!! Use factory methods instead !!!
         """
+        warnings.warn(
+            "Using Gaussian-based KL approximation for Student-t; results may be inaccurate.",
+            UserWarning,
+            stacklevel=2,
+        )
         super().__init__(num_dimensions)
         mu_rates = np.full(self._num_dimensions, 1.0)
         var_rates = np.full(self._num_dimensions, 1.0)
