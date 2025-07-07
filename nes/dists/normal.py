@@ -79,7 +79,7 @@ class Normal(Dist):
             self._param_A_var, np.eye(self._num_dimensions)
         )
         invVariance = inverse_A_var @ inverse_A_var.T
-        adjusted_fitness = fitnesses - fitnesses.min()
+        adjusted_fitness = -fitnesses + fitnesses.max()
         adjusted_fitness /= adjusted_fitness.sum()
         for idx, sample in enumerate(samples):
             log_grad_mean = invVariance @ (sample - self._mean)
@@ -102,6 +102,9 @@ class Normal(Dist):
     ) -> npt.NDArray:
         """Get variation of parameters."""
         grad_mean, grad_A, fischer_mu, fischer_A = self._gradient(samples, fitnesses)
+        eps = 1e-6
+        fischer_mu += eps * np.eye(self._num_dimensions)
+        fischer_A += eps * np.eye(self._num_dimensions)
         cho_fischer_mu, lower = cho_factor(fischer_mu)
         cho_fischer_A, lower = cho_factor(fischer_A)
         # Solving equation F@variation = beta grad_parameters for variation to avoid
@@ -144,9 +147,10 @@ class NormalSchaulLR(Normal):
 
     def __init__(self, num_dimensions: int) -> None:
         super().__init__(num_dimensions)
-        mu_rates = 1
-        var_rates = (
-            (3 + np.log(self._num_dimensions)) / 5 / np.sqrt(self._num_dimensions)
+        mu_rates = np.full(self._num_dimensions, 1)
+        var_rates = np.full(
+            self._num_dimensions,
+            (3 + np.log(self._num_dimensions)) / 5 / np.sqrt(self._num_dimensions),
         )
         self.rates = np.concatenate((mu_rates, var_rates))
 

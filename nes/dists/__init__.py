@@ -9,7 +9,7 @@ from .diag_normal import DiagNormal, DiagNormalSchaulLR, DiagNormalAdaptive
 from .xdiag_normal import XDiagNormal, XDiagNormalSchaulLR, XDiagNormalAdaptive
 from .student_t import StudentTDist, StudentTDistSchaulLR, StudentTDistAdaptive
 from .xnormal import XNormal, XNormalSchaulLR, XNormalAdaptive
-from .normal import Normal
+from .normal import Normal, NormalSchaulLR
 
 __all__ = [
     "DiagNormal",
@@ -18,6 +18,7 @@ __all__ = [
     "Dist",
     "Laplace",
     "Normal",
+    "NormalSchaulLR",
     "StudentTDist",
     "StudentTDistAdaptive",
     "StudentTDistSchaulLR",

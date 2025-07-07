@@ -169,16 +169,43 @@ class DiagNormalAdaptive(DiagNormal):
     def param_variation(
         self, samples: npt.NDArray[np.float64], fitnesses: npt.NDArray[np.float64]
     ) -> npt.NDArray[np.float64]:
-        """Compute parameter variation with EMA-stabilized KL-based rate."""
         variation = self._inverse_fisher(samples) * self._gradient(samples, fitnesses)
-        g_var = variation[self._num_dimensions :]
-        norm_sq = np.sum(g_var**2)
-        self._grad_var_ema = (
-            self.ema_beta * self._grad_var_ema + (1 - self.ema_beta) * norm_sq
+
+        mean_var = variation[: self._num_dimensions]
+        sigma_var = variation[self._num_dimensions :]
+
+        # --- Adaptive rates
+        mean_norm_sq = np.sum(mean_var**2)
+        sigma_norm_sq = np.sum(sigma_var**2)
+
+        # Initialize EMA if needed
+        if not hasattr(self, "_mean_grad_ema"):
+            self._mean_grad_ema = mean_norm_sq
+            self._sigma_grad_ema = sigma_norm_sq
+
+        # Update EMA
+        self._mean_grad_ema = (
+            self.ema_beta * self._mean_grad_ema + (1 - self.ema_beta) * mean_norm_sq
         )
-        self.rates[self._num_dimensions :] = 2.0 * np.sqrt(
-            self.klbudget / (self._grad_var_ema + 1e-12)
+        self._sigma_grad_ema = (
+            self.ema_beta * self._sigma_grad_ema + (1 - self.ema_beta) * sigma_norm_sq
         )
+
+        # Update rates
+        self.rates[: self._num_dimensions] = np.sqrt(
+            self.klbudget / (self._mean_grad_ema + 1e-12)
+        )
+        self.rates[self._num_dimensions :] = np.sqrt(
+            self.klbudget / (self._sigma_grad_ema + 1e-12)
+        )
+        self.rates = np.clip(self.rates, 1e-4, 0.20)
+
+        # Final update
         update = self.rates * variation
         self._params += update
+
+        # Clamp variances to avoid collapse
+        self._params[self._num_dimensions :] = np.maximum(
+            self._params[self._num_dimensions :], self.var_eps
+        )
         return update
