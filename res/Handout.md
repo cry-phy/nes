@@ -1,8 +1,10 @@
 # NES - Natural Evolution Strategies
 
-Natural Evolution Strategies are a class of evolutionary optimization strategies (ES) that optimize the parameters of distributions to find optima in a (high dimensionsional) potential landscape. These strategies combine the use of stochastic gradients with further distribution specific properties like fisher information matrix to produce more reliable results. Since the choice of distribution and its parametrization have an impact on the performance of the specific algorithm a comparioson becomes exceedingly interesting.
+The code and this file can be found on the repository: [https://git.uibk.ac.at/csaz6745/nes](https://git.uibk.ac.at/csaz6745/nes).
 
-The Entire project is based on a Summary of the method from [Wiestra et al. (2008)](https://ieeexplore.ieee.org/document/4631255).
+Natural Evolution Strategies are a class of evolutionary optimization strategies (ES) that optimize the parameters of distributions to find optima in a (high-dimensional) potential landscape. These strategies combine the use of stochastic gradients with further distribution-specific properties like the Fisher information matrix to produce more reliable results. Since the choice of distribution and its parametrization have an impact on the performance of the specific algorithm, a comparison becomes exceedingly interesting.
+
+The entire project is based on a summary of the method from [Wierstra et al. (2008)](https://ieeexplore.ieee.org/document/4631255).
 
 ## Theoretical Background
 
@@ -30,7 +32,7 @@ $$
 \boldsymbol{\theta} = (\mu_1, \mu_2, \mu_3, \sigma_1, \sigma_2, \sigma_3)^T
 $$
 
-Using this parameterization, it becomes viable to compute the stochastic gradient in the parameter space based on samples evaluated on the potential surface. Specifically, one simply takes the gradient of the probability density function (PDF) with respect to the parameters:
+Using this parametrization, it becomes viable to compute the stochastic gradient in the parameter space based on samples evaluated on the potential surface. Specifically, one simply takes the gradient of the probability density function (PDF) with respect to the parameters:
 
 $$
 \nabla_{\boldsymbol{\theta}} J(\boldsymbol{\theta}) \approx \frac{1}{\lambda} \sum_{k=1}^{\lambda} f(\mathbf{z}_k)\, \nabla_{\boldsymbol{\theta}} \log \pi(\mathbf{z}_k \mid \boldsymbol{\theta})
@@ -60,15 +62,15 @@ $$
 
 This expression can be plugged into the Monte Carlo estimator to compute the stochastic gradient update in NES.
 
-The well understood issue with wimply appying this gradient in  a gradient descent manner is the inverse relation of the mean update and the covariance:
+The well-understood issue with simply applying this gradient in a gradient descent manner is the inverse relation of the mean update and the covariance:
 
 $$
 \nabla_{\mu_i} J(\boldsymbol{\theta}) \propto \frac{1}{\sigma_i^2}
 $$
 
-The result is that the closer the distribution zeros in on the minimum, reducing variance in the process, the more volatile the mean becomes preventing high accuracy.
+The result is that the closer the distribution zeros in on the minimum, reducing variance in the process, the more volatile the mean becomes, preventing high accuracy.
 
-To address this fundamental limitation, Natural Evolution Strategies (NES) introduces a principled approach by leveraging the structure of the underlying distribution. Specifically NES introduces the Fisher information matrix as a correction (essentially preconditioner) to the update
+To address this fundamental limitation, Natural Evolution Strategies (NES) introduces a principled approach by leveraging the structure of the underlying distribution. Specifically, NES introduces the Fisher information matrix as a correction (essentially preconditioner) to the update
 
 $$
 \widetilde{\nabla}_{\boldsymbol{\theta}} J(\boldsymbol{\theta}) := \mathbf{F}^{-1}(\boldsymbol{\theta}) \, \nabla_{\boldsymbol{\theta}} J(\boldsymbol{\theta})
@@ -76,22 +78,22 @@ $$
 
 This ensures invariance under the parametrization and allows for scale invariance between different parameters.
 
-The General Fisher matrix for a distribution $\pi(\mathbf{z} \mid \boldsymbol{\theta})$ is given by:
+The general Fisher matrix for a distribution $\pi(\mathbf{z} \mid \boldsymbol{\theta})$ is given by:
 
 $$
 \mathbf{F}(\boldsymbol{\theta}) = \mathbb{E}_{\mathbf{z} \sim \pi(\cdot \mid \boldsymbol{\theta})} \left[ \nabla_{\boldsymbol{\theta}} \log \pi(\mathbf{z} \mid \boldsymbol{\theta}) \, \nabla_{\boldsymbol{\theta}} \log \pi(\mathbf{z} \mid \boldsymbol{\theta})^T \right]
 $$
 
-Generally this is done stchastically using a similar approach as for the stochastic gradient.
+Generally, this is done stochastically using a similar approach as for the stochastic gradient.
 
-For specific cases (multivariate normals) however there exists an acceptable closed form solution provided by the equation:
+For specific cases (multivariate normals), however, there exists an acceptable closed-form solution provided by the equation:
 
 $$
 \mathcal{I}_{m,n} = \frac{\partial \boldsymbol{\mu}^{\mathrm{T}}}{\partial \theta_m}
 \boldsymbol{\Sigma}^{-1} \frac{\partial \boldsymbol{\mu}}{\partial \theta_n} + \frac{1}{2} \, \mathrm{tr} \left( \boldsymbol{\Sigma}^{-1} \frac{\partial \boldsymbol{\Sigma}}{\partial \theta_m} \boldsymbol{\Sigma}^{-1} \frac{\partial \boldsymbol{\Sigma}}{\partial \theta_n} \right)
 $$
 
-In the case of our separable Gaussian distribution we can attain the Fisher matrix analytically:
+In the case of our separable Gaussian distribution, we can attain the Fisher matrix analytically:
 
 $$
 \mathbf{F}_{\mu_i, \mu_i} = \frac{1}{\sigma_i^2} \hspace{20px} \mathbf{F}_{\sigma_i, \sigma_i} =
@@ -109,7 +111,7 @@ This allows for the usage of a wide variety of functions to better fit the circu
 
 ## Subclasses of NES
 
-Normal Distributions are a common choice for Stochastic gradient methods making up a large part of the implementations. Especially exponential representations are common due to the reduction of complexity in the calculation. Exponential (xNES) and non exponential parametrizations are implemented for this project allowing the comparison between the two strategies based on stability and performance. This group is also split further in separable (SNES) and full representations since advantages, especially from a computational point of view, can vary quite significantly. Heavy Tailed distributions represented by the Students-t class of distributions are also represented as they can allow for avoidance of local minima.
+Normal distributions are a common choice for stochastic gradient methods, making up a large part of the implementations. Especially exponential representations are common due to the reduction of complexity in the calculation. Exponential (xNES) and non-exponential parametrizations are implemented for this project, allowing the comparison between the two strategies based on stability and performance. This group is also split further into separable (SNES) and full representations since advantages, especially from a computational point of view, can vary quite significantly. Heavy-tailed distributions represented by the Students-t class of distributions are also represented as they can allow for avoidance of local minima.
 
 To appropriately assess the performance depending on the following distributions and parametrizations were implemented.
 
@@ -269,15 +271,15 @@ The Fisher matrix for the multivariate normal exponential representation is comp
 
 ## Learning Rates
 
-Despite seeming similar to many other optimization strategies we cannot use common optimtazion strategies around learning rates. Since there exists essentially a feedback loop between the ditsribution and sample fitnesses it becomes quite fragile to adaptively change step sizes:
+Despite seeming similar to many other optimization strategies, we cannot use common optimization strategies around learning rates. Since there exists essentially a feedback loop between the distribution and sample fitnesses, it becomes quite fragile to adaptively change step sizes:
 
-In the case this introduces addition step size consistently we get recursive instability. In the case of essentially overdamping we get premature convergence.
+In the case this introduces additional step size consistently, we get recursive instability. In the case of essentially overdamping, we get premature convergence.
 
-Therefore we must choose the learning rates very carefully. Generally we cannot touch the learning rate of the means at all making parameter specific learning rates necessary. This already makes usual approaches for avoiding local minima impossible: Momentum based approaches and adaptive increases/decreases based on performance become impossible for the means.
+Therefore, we must choose the learning rates very carefully. Generally, we cannot touch the learning rate of the means at all, making parameter-specific learning rates necessary. This already makes usual approaches for avoiding local minima impossible: Momentum-based approaches and adaptive increases/decreases based on performance become impossible for the means.
 
-Commonly used are however approaches scaling or even resetting the variances at certain stages of the process. This essentially equates to heat based approaches that repetetively attempt to avoid local minima by temporarily increasing the variance potentially allowing an escape from the local minium.
+Commonly used are, however, approaches scaling or even resetting the variances at certain stages of the process. This essentially equates to heat-based approaches that repetitively attempt to avoid local minima by temporarily increasing the variance, potentially allowing an escape from the local minimum.
 
-An entirely different approach is provided by the use of Heavy Tailed functions such as Cauchy (or more generally Students-T) distributions that by default sample more points at further out points. If this successfully lands outside the local minimum it allows a so called hop to a new location by being the largest contributor the to gradient by magnitudes.
+An entirely different approach is provided by the use of heavy-tailed functions such as Cauchy (or more generally Students-T) distributions that by default sample more points at further out points. If this successfully lands outside the local minimum, it allows a so-called hop to a new location by being the largest contributor to the gradient by magnitudes.
 
 The learning rates for the parameters can be adjusted based on different strategies that were found to work:
 
@@ -293,7 +295,7 @@ The learning rates for the parameters can be adjusted based on different strateg
    - This tends to perform better for higher dimensional problems.
    - $\delta\theta \;\mapsto\; r\,\delta\theta$ with $r = \sqrt{\frac{2\,\text{klbudget}}{\delta\theta^\top F\,\delta\theta}}$ ([Slide Set (Page 6)](https://people.eecs.berkeley.edu/~pabbeel/cs287-fa09/lecture-notes/lecture20-2pp.pdf?utm_source=chatgpt.com))
 
-Generally both of these perform quite similarily for low ($\approx 30$) dimensions while for higher dimensional problems the KL-based approach dominates by far.
+Generally, both of these perform quite similarly for low ($\approx 30$) dimensions, while for higher dimensional problems, the KL-based approach dominates by far.
 
 ## Implementation
 
@@ -303,7 +305,7 @@ Essentially, the implementation consists of 3 components: **Models**, **Distribu
 
 Models are implemented in a way to support Python and NumPy functions/operators, enabling intuitive and expressive numerical model definitions. The backend utilizes corresponding NumPy operators, reducing overhead to simple object function calls per algebraic operation.
 
-While Distributions are implemented as presented above we need to discuss the models available for testing.
+While distributions are implemented as presented above, we need to discuss the models available for testing.
 
 ### Models
 
@@ -347,9 +349,9 @@ An example optimization of the algorithm (using Ackley function and diagonal cov
 
 ![Ackley, XDiagNormalAdaptive](Ackley_Conv.png)
 
-As can be seen we can get initial overshoots as well as small sections of more stagnant steps. Still the optimization is successfull and finds the global optimum (minimum), with what is essentially exponential convergence.
+As can be seen we can get initial overshoots as well as small sections of more stagnant steps. Still the optimization is successful and finds the global optimum (minimum), with what is essentially exponential convergence.
 
-Additionally some animations are provided here to better show the distribution adapt to the search landscape:
+Additionally, some animations are provided here to better show the distribution adapt to the search landscape:
 
 ![Rastrigin xNES](xnes_rastrigin.gif)
 
@@ -357,13 +359,13 @@ Additionally some animations are provided here to better show the distribution a
 
 ### Dimensional Performance
 
-To assess the differences between different Distributions and specifically learning rates we perform ensemble optimizations for two separate sphere functions in different dimensions. For this test the diagonal multivariate normals use a KL-budget learning rate, while the full covariance approach using the heuristic learning rate.
+To assess the differences between different distributions and specifically learning rates, we perform ensemble optimizations for two separate sphere functions in different dimensions. For this test, the diagonal multivariate normals use a KL-budget learning rate, while the full covariance approach uses the heuristic learning rate.
 
-Starting with a low dimensional case we can exponential convergence:
+Starting with a low-dimensional case, we can see exponential convergence:
 
 ![2D Sphere Optimizations](lowDSphere.png)
 
-The different learning rates do not yet make a notable difference. In opposition we get different performance for different learning rates in higher dimensional problems:
+The different learning rates do not yet make a notable difference. In opposition, we get different performance for different learning rates in higher dimensional problems:
 
 ![128D Sphere Optimizations](highDSphere.png)
 
@@ -371,18 +373,48 @@ The different learning rates do not yet make a notable difference. In opposition
 
 ### Model-Distribution Compatibility
 
-To assess usability of the different Distributions over a variety of models a compatability matrix is created using an ensemble of optimization attempts with random start values over the bounds of the trial functions. Termination criteria are errors (`np.nan`) or convergence  to within tolerance. This allows for the generation of the following visualization:
+To assess usability of the different distributions over a variety of models, a compatibility matrix is created using an ensemble of optimization attempts with random start values over the bounds of the trial functions. Termination criteria are errors (`np.nan`) or convergence to within tolerance. This allows for the generation of the following visualization:
 
 ![Compatibility Matrix](capabilities_multistart.png)
 
-The image shows the averaged euclidian distance from the optimum after termination for the attempts. Some distribution-function combinations clearly outperform others. However there exists no clear distribution candidate outperforming all others. This is simply a basic property of optimization problems as finding a general optimization algorithm for all problems becomes impossible based on the [*No Free Lunch Theorems for Optimization* (1997)](https://ieeexplore.ieee.org/document/585893).
+The image shows the averaged Euclidean distance from the optimum after termination for the attempts. Some distribution-function combinations clearly outperform others. However, there exists no clear distribution candidate outperforming all others. This is simply a basic property of optimization problems as finding a general optimization algorithm for all problems becomes impossible based on the [*No Free Lunch Theorems for Optimization* (1997)](https://ieeexplore.ieee.org/document/585893).
 
-This still shows a applicability of the algorithms for a wide variety of functions and optimization problems, despite the barebones implementation.
+This still shows an applicability of the algorithms for a wide variety of functions and optimization problems, despite the barebones implementation.
 
-Specifically it is possible to see that the premature convergence in local minima remains a significant problem as the average distances suggest. For Rastrigin and Ackley that offer local minima we can extract information on how likely a convergence to the gloabal minimum is by the mean distance. The higher the mean distance the more likely the convergence reaches only a local minimum.
+Specifically, it is possible to see that the premature convergence in local minima remains a significant problem as the average distances suggest. For Rastrigin and Ackley that offer local minima, we can extract information on how likely a convergence to the global minimum is by the mean distance. The higher the mean distance, the more likely the convergence reaches only a local minimum.
 
 ## Summary
 
-In the end these algorithms offer an approach for a wide variety of problems and perform adequately. While there are still issues these might be be alleviated by more sophisticated implementations using more complex methods such as restarts, heat based expansions or advanced learning rates.
+In the end, these algorithms offer an approach for a wide variety of problems and perform adequately. While there are still issues, these might be alleviated by more sophisticated implementations using more complex methods such as restarts, heat-based expansions, or advanced learning rates.
 
 ## Additional Reading
+
+Certainly — here is the **updated “Additional Reading”** section including the curated NES literature directly under your `## Summary` heading:
+
+---
+
+## Summary
+
+In the end, these algorithms offer an approach for a wide variety of problems and perform adequately. While there are still issues, these might be alleviated by more sophisticated implementations using more complex methods such as restarts, heat-based expansions, or advanced learning rates.
+
+## Additional Reading
+
+* **Wierstra et al. (2014)** – *Natural Evolution Strategies*. *Journal of Machine Learning Research*
+  Extended and cleaned-up version including theory and applications.
+  [PDF](https://www.jmlr.org/papers/volume15/wierstra14a/wierstra14a.pdf)
+
+* **Wierstra et al. (2008)** – *Natural Evolution Strategies*. CEC 2008
+  Introduces NES with natural gradients and fitness shaping.
+  [PDF](https://people.idsia.ch/~juergen/nes2008.pdf), [Wikipedia](https://en.wikipedia.org/wiki/Natural_evolution_strategy)
+
+* **Schaul et al. (2011)** – *High Dimensions and Heavy Tails for Natural Evolution Strategies*. GECCO
+  Introduces heuristic learning rates for NES and the use of heavy-tailed distributions.
+  [PDF](https://www.idsia.ch/~juergen/gecco2011snes.pdf)
+
+* **Schaul (2012)** – *Natural Evolution Strategies Converge on Sphere Functions*. GECCO
+  Proves exponential convergence for NES on quadratic landscapes.
+  [PDF](https://schaul.site44.com/publications/nesproof.pdf), [arXiv](https://arxiv.org/abs/1106.4487)
+
+* **Wikipedia** – *Natural Evolution Strategies*
+  General overview and pointers to NES variants.
+  [Article](https://en.wikipedia.org/wiki/Natural_evolution_strategy)
