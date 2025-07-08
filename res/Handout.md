@@ -2,6 +2,8 @@
 
 Natural Evolution Strategies are a class of evolutionary optimization strategies (ES) that optimize the parameters of distributions to find optima in a (high dimensionsional) potential landscape. These strategies combine the use of stochastic gradients with further distribution specific properties like fisher information matrix to produce more reliable results. Since the choice of distribution and its parametrization have an impact on the performance of the specific algorithm a comparioson becomes exceedingly interesting.
 
+The Entire project is based on a Summary of the method from [Wiestra et al. (2008)](https://ieeexplore.ieee.org/document/4631255).
+
 ## Theoretical Background
 
 The general idea of NES is to choose parameters ($\theta_i$) for a more or less problem-specific distribution into a parameter vector
@@ -281,10 +283,106 @@ The learning rates for the parameters can be adjusted based on different strateg
 
 1. **Constant Learning Rates**: Heuristically chosen rates, such as:
    - $\mu$ rates: $1$
-   - $\mathbf{A}$ rates: $\frac{3 + \log(d)}{5 \sqrt{d}}$ (Schaul et al. 2013 "No More Pesky Learning Rates")
+   - $\mathbf{A}$ rates: $\frac{3 + \log(d)}{5 \sqrt{d}}$ ([Schaul et. al. 2011](https://www.researchgate.net/publication/220740506_High_Dimensions_and_Heavy_Tails_for_Natural_Evolution_Strategies))
+   - Works extremely well for up to 32 Dimensions.
 
 
 2. **Adaptive Learning Rates**: KL-based rates with EMA stabilization:
    - Covariance rates are adjusted dynamically using a KL budget and exponential moving average (EMA) of gradient norms.
+   - This rescaling can cause numerical instability in a few cases.
+   - This tends to perform better for higher dimensional problems.
+   - $\delta\theta \;\mapsto\; r\,\delta\theta$ with $r = \sqrt{\frac{2\,\text{klbudget}}{\delta\theta^\top F\,\delta\theta}}$ ([Slide Set (Page 6)](https://people.eecs.berkeley.edu/~pabbeel/cs287-fa09/lecture-notes/lecture20-2pp.pdf?utm_source=chatgpt.com))
 
 Generally both of these perform quite similarily for low ($\approx 30$) dimensions while for higher dimensional problems the KL-based approach dominates by far.
+
+## Implementation
+
+The code can be found under the public [GitLab Repository](https://git.uibk.ac.at/csaz6745/nes).
+
+Essentially, the implementation consists of 3 components: **Models**, **Distributions**, and **Optimizers**. Optimizers encapsulate the iteration logic and are not strictly necessary for usage, as direct access to models and distributions is also possible. The latter are implemented as abstract base classes, allowing for easy and safe addition of new variants.
+
+Models are implemented in a way to support Python and NumPy functions/operators, enabling intuitive and expressive numerical model definitions. The backend utilizes corresponding NumPy operators, reducing overhead to simple object function calls per algebraic operation.
+
+While Distributions are implemented as presented above we need to discuss the models available for testing.
+
+### Models
+
+Models define a callable objective function $f: \mathbb{R}^d \to \mathbb{R}$, and expose bounds for plotting and optimization.
+
+For benchmarking the performance of different implementations, a variety of well-known 2D test functions are included, such as:
+
+* Sphere
+* Rastrigin
+* Ackley
+* Rosenbrock
+* Eggholder
+* And more
+
+See [`nes.models.benchmarks2D`](https://git.uibk.ac.at/csaz6745/nes/-/tree/main/nes/models/benchmarks2D.py) for available test functions but here are their visualizations since its nice to look at:
+
+![All models](allmodels.png)
+
+### Example Usage
+
+A minimal working example using NES without the optimizer class:
+
+```python
+from nes.models.benchmarks2D import Sphere
+from nes.dists import XDiagNormal
+import numpy as np
+
+model = Sphere.model()
+dist = XDiagNormal.from_model(model)
+for _ in range(100):
+    samples = dist.get_samples(100)
+    fitness = model.evaluate_samples(samples)
+    dist.param_variation(samples, fitness)
+```
+
+This loop demonstrates the raw interaction between model and distribution—sample, evaluate, update—representing the core NES update rule. For further usage please refer to the  [`example.ipynb`](https://git.uibk.ac.at/csaz6745/nes/-/tree/main/res/example.ipynb)
+
+## Performance
+
+An example optimization of the algorithm (using Ackley function and diagonal covariance with exponential parametrization) can be seen below:
+
+![Ackley, XDiagNormalAdaptive](Ackley_Conv.png)
+
+As can be seen we can get initial overshoots as well as small sections of more stagnant steps. Still the optimization is successfull and finds the global optimum (minimum), with what is essentially exponential convergence.
+
+Additionally some animations are provided here to better show the distribution adapt to the search landscape:
+
+![Rastrigin xNES](xnes_rastrigin.gif)
+
+![Buckin xNES](xnes_bukin.gif)
+
+### Dimensional Performance
+
+To assess the differences between different Distributions and specifically learning rates we perform ensemble optimizations for two separate sphere functions in different dimensions. For this test the diagonal multivariate normals use a KL-budget learning rate, while the full covariance approach using the heuristic learning rate.
+
+Starting with a low dimensional case we can exponential convergence:
+
+![2D Sphere Optimizations](lowDSphere.png)
+
+The different learning rates do not yet make a notable difference. In opposition we get different performance for different learning rates in higher dimensional problems:
+
+![128D Sphere Optimizations](highDSphere.png)
+
+
+
+### Model-Distribution Compatibility
+
+To assess usability of the different Distributions over a variety of models a compatability matrix is created using an ensemble of optimization attempts with random start values over the bounds of the trial functions. Termination criteria are errors (`np.nan`) or convergence  to within tolerance. This allows for the generation of the following visualization:
+
+![Compatibility Matrix](capabilities_multistart.png)
+
+The image shows the averaged euclidian distance from the optimum after termination for the attempts. Some distribution-function combinations clearly outperform others. However there exists no clear distribution candidate outperforming all others. This is simply a basic property of optimization problems as finding a general optimization algorithm for all problems becomes impossible based on the [*No Free Lunch Theorems for Optimization* (1997)](https://ieeexplore.ieee.org/document/585893).
+
+This still shows a applicability of the algorithms for a wide variety of functions and optimization problems, despite the barebones implementation.
+
+Specifically it is possible to see that the premature convergence in local minima remains a significant problem as the average distances suggest. For Rastrigin and Ackley that offer local minima we can extract information on how likely a convergence to the gloabal minimum is by the mean distance. The higher the mean distance the more likely the convergence reaches only a local minimum.
+
+## Summary
+
+In the end these algorithms offer an approach for a wide variety of problems and perform adequately. While there are still issues these might be be alleviated by more sophisticated implementations using more complex methods such as restarts, heat based expansions or advanced learning rates.
+
+## Additional Reading
