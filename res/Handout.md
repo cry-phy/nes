@@ -389,16 +389,6 @@ In the end, these algorithms offer an approach for a wide variety of problems an
 
 ## Additional Reading
 
-Certainly — here is the **updated “Additional Reading”** section including the curated NES literature directly under your `## Summary` heading:
-
----
-
-## Summary
-
-In the end, these algorithms offer an approach for a wide variety of problems and perform adequately. While there are still issues, these might be alleviated by more sophisticated implementations using more complex methods such as restarts, heat-based expansions, or advanced learning rates.
-
-## Additional Reading
-
 * **Wierstra et al. (2014)** – *Natural Evolution Strategies*. *Journal of Machine Learning Research*
   Extended and cleaned-up version including theory and applications.
   [PDF](https://www.jmlr.org/papers/volume15/wierstra14a/wierstra14a.pdf)
