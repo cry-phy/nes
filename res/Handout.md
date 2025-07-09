@@ -96,7 +96,7 @@ $$
 In the case of our separable Gaussian distribution, we can attain the Fisher matrix analytically:
 
 $$
-\mathbf{F}_{\mu_i, \mu_i} = \frac{1}{\sigma_i^2} \hspace{20px} \mathbf{F}_{\sigma_i, \sigma_i} =
+\mathbf{F}_{\mu_i, \mu_i} = \frac{1}{\sigma_i^2} \hspace{20px} \mathbf{F}_{\sigma_i, \sigma_i} = \frac{1}{2\sigma_i^4}
 $$
 
 Therefore, the natural gradient corrects the problematic inverse scaling observed in the standard gradient, yielding updates like:
@@ -146,7 +146,7 @@ $$
 $$
 
 The separable multivariate normal exponential representation uses logarithmic parameters for the covariance, simplifying updates and ensuring positive variances.
-
+### Seperable Multivariate Normal Exponentioal Representation
 #### Parametrization
 
 The distribution is parameterized by:
